@@ -1,0 +1,14 @@
+# Loads every dashboard JSON found in /var/lib/grafana/dashboards at start-up.
+apiVersion: 1
+
+providers:
+  - name: bi-paros-envasado
+    orgId: 1
+    folder: Monitoreo envasado
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

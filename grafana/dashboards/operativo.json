@@ -1,0 +1,721 @@
+{
+  "uid": "oee-operativo",
+  "title": "Monitoreo operativo — Líneas de envasado",
+  "description": "Tablero near real time: OEE hora a hora, estado por máquina y alertas (datos simulados).",
+  "tags": [
+    "oee",
+    "envasado",
+    "operativo"
+  ],
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "10s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m"
+    ]
+  },
+  "schemaVersion": 39,
+  "version": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "maquina",
+        "label": "Máquina",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "pg-dw"
+        },
+        "query": "SELECT maquina_nk FROM dw.dim_maquina WHERE es_actual ORDER BY 1",
+        "definition": "SELECT maquina_nk FROM dw.dim_maquina WHERE es_actual ORDER BY 1",
+        "multi": true,
+        "includeAll": true,
+        "refresh": 1,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": []
+      },
+      {
+        "name": "turno",
+        "label": "Turno",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "pg-dw"
+        },
+        "query": "SELECT turno_nk FROM dw.dim_turno WHERE turno_sk BETWEEN 1 AND 3 ORDER BY turno_sk",
+        "definition": "SELECT turno_nk FROM dw.dim_turno WHERE turno_sk BETWEEN 1 AND 3 ORDER BY turno_sk",
+        "multi": true,
+        "includeAll": true,
+        "refresh": 1,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": []
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "OEE de la última hora por máquina",
+      "type": "stat",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pg-dw"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pg-dw"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT h.ts AS time, m.maquina_nk AS metric, ROUND(h.oee * 100, 1) AS value\nFROM dw.fact_produccion_hora h\nJOIN dw.dim_maquina m ON m.maquina_sk = h.maquina_sk\nJOIN dw.dim_turno   t ON t.turno_sk   = h.turno_sk\nWHERE $__timeFilter(h.ts) AND m.maquina_nk IN ($maquina) AND t.turno_nk IN ($turno)\nORDER BY 1"
+        }
+      ],
+      "description": "Último valor de OEE simulado por máquina. Rojo < 60% (umbral de alerta), naranja < 75% (meta).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 75
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Estado actual por máquina",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pg-dw"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pg-dw"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT maquina_nk AS \"Máquina\", estado AS \"Estado\", modo_simulacion AS \"Modo\",\n       turno_nk AS \"Turno\", ROUND(oee * 100, 1) AS \"OEE %\", pacas AS \"Pacas\",\n       pacas_meta AS \"Meta\", minutos_paro_no_planif AS \"Min. paro\",\n       causa_principal AS \"Causa principal\", hora_simulada AS \"Hora planta\"\nFROM dw.vw_rt_estado_actual\nWHERE maquina_nk IN ($maquina)\nORDER BY 1"
+        }
+      ],
+      "description": "Último registro de cada máquina (vista dw.vw_rt_estado_actual).",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Estado"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "OK": {
+                        "color": "green",
+                        "index": 0
+                      },
+                      "BAJO META": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "CRÍTICO": {
+                        "color": "red",
+                        "index": 2
+                      },
+                      "PARADA": {
+                        "color": "dark-red",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OEE %"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 60
+                    },
+                    {
+                      "color": "green",
+                      "value": 75
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "id": 3,
+      "title": "OEE por hora",
+      "type": "timeseries",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pg-dw"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 16,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pg-dw"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT h.ts AS time, m.maquina_nk AS metric, ROUND(h.oee * 100, 1) AS value\nFROM dw.fact_produccion_hora h\nJOIN dw.dim_maquina m ON m.maquina_sk = h.maquina_sk\nJOIN dw.dim_turno   t ON t.turno_sk   = h.turno_sk\nWHERE $__timeFilter(h.ts) AND m.maquina_nk IN ($maquina) AND t.turno_nk IN ($turno)\nORDER BY 1"
+        }
+      ],
+      "description": "Cada punto es una hora simulada. La franja roja marca el umbral de alerta (60%).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 110,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 75
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "showPoints": "always",
+            "thresholdsStyle": {
+              "mode": "dashed+area"
+            },
+            "fillOpacity": 0
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "min"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Disponibilidad · Rendimiento · Calidad (rango visible)",
+      "type": "gauge",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pg-dw"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 6,
+        "w": 8,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pg-dw"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT ROUND(100 * SUM(h.minutos_operativos) / NULLIF(SUM(60 - h.minutos_planificados), 0), 1) AS \"Disponibilidad\",\n       ROUND(100 * SUM(h.pacas) / NULLIF(SUM(h.pacas_ideales), 0), 1) AS \"Rendimiento\",\n       ROUND(100 * AVG(h.calidad), 1) AS \"Calidad\"\nFROM dw.fact_produccion_hora h\nJOIN dw.dim_maquina m ON m.maquina_sk = h.maquina_sk\nJOIN dw.dim_turno   t ON t.turno_sk   = h.turno_sk\nWHERE $__timeFilter(h.ts) AND m.maquina_nk IN ($maquina) AND t.turno_nk IN ($turno)"
+        }
+      ],
+      "description": "Componentes del OEE agregados como razón de sumas (no promedio de porcentajes).",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "green",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true,
+        "orientation": "vertical"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Pacas producidas vs meta horaria",
+      "type": "timeseries",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pg-dw"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pg-dw"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT h.ts AS time, SUM(h.pacas) AS \"Pacas producidas\", SUM(h.pacas_meta) AS \"Meta (85% ideal)\"\nFROM dw.fact_produccion_hora h\nJOIN dw.dim_maquina m ON m.maquina_sk = h.maquina_sk\nJOIN dw.dim_turno   t ON t.turno_sk   = h.turno_sk\nWHERE $__timeFilter(h.ts) AND m.maquina_nk IN ($maquina) AND t.turno_nk IN ($turno)\nGROUP BY h.ts\nORDER BY 1"
+        }
+      ],
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "lineWidth": 1
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Meta (85% ideal)"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    10,
+                    10
+                  ]
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Minutos de paro no planificado por causa",
+      "type": "bargauge",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pg-dw"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 15,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pg-dw"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(c.codigo_label, 'Sin paro') AS \"Causa\", SUM(h.minutos_paro_no_planif) AS \"Minutos\"\nFROM dw.fact_produccion_hora h\nJOIN dw.dim_maquina m ON m.maquina_sk = h.maquina_sk\nJOIN dw.dim_turno   t ON t.turno_sk   = h.turno_sk\nLEFT JOIN dw.dim_causa_paro c ON c.causa_sk = h.causa_principal_sk\nWHERE $__timeFilter(h.ts) AND m.maquina_nk IN ($maquina) AND t.turno_nk IN ($turno) AND h.minutos_paro_no_planif > 0\nGROUP BY 1\nORDER BY 2 DESC\nLIMIT 8"
+        }
+      ],
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "color": {
+            "mode": "continuous-YlRd"
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/Minutos/",
+          "values": true
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "namePlacement": "left"
+      }
+    },
+    {
+      "id": 7,
+      "title": "Alertas recibidas (webhook)",
+      "type": "table",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pg-dw"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pg-dw"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT recibida_en AS \"Recibida\", estado AS \"Estado\", maquina AS \"Máquina\",\n       regla AS \"Regla\", valor AS \"Valor\"\nFROM ops.alertas_recibidas\nORDER BY alerta_id DESC\nLIMIT 20"
+        }
+      ],
+      "description": "Notificaciones que Grafana envió al contact point (servicio alert-sink -> ops.alertas_recibidas).",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Estado"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "firing": {
+                        "color": "red",
+                        "text": "DISPARADA",
+                        "index": 0
+                      },
+                      "resolved": {
+                        "color": "green",
+                        "text": "RESUELTA",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "id": 8,
+      "title": "Contexto histórico: OEE mensual por máquina",
+      "type": "timeseries",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "pg-dw"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 23,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "pg-dw"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT make_date(anio, mes, 1)::timestamptz AS time, maquina_nk AS metric,\n       ROUND(oee * 100, 1) AS value\nFROM dw.vw_kpi_mensual_maquina\nWHERE oee IS NOT NULL AND maquina_nk IN ($maquina)\nORDER BY 1"
+        }
+      ],
+      "description": "Datos históricos del ETL (2023–2025) para comparar el tiempo real con la línea base.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 110,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 75
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "showPoints": "always",
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "timeFrom": "5y",
+      "hideTimeOverride": false
+    }
+  ]
+}

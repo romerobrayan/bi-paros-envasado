@@ -1,0 +1,110 @@
+# =============================================================================
+# One command to bring the whole server side up from scratch:
+#     docker compose up -d --build
+# Start order is enforced with healthchecks / completion conditions:
+#     db (healthy) -> etl (completed) -> simulator, grafana ; alert-sink
+# Power BI Desktop and DBeaver run on the host and connect to localhost:${DB_PORT}
+# =============================================================================
+name: bi-paros-envasado
+
+x-db-env: &db-env
+  DB_HOST: db
+  DB_PORT: "5432"
+  POSTGRES_DB: ${POSTGRES_DB}
+  ETL_DB_USER: ${ETL_DB_USER}
+  ETL_DB_PASSWORD: ${ETL_DB_PASSWORD}
+
+services:
+  db:
+    image: postgres:16.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: America/Bogota
+      # read by sql/init/99_roles.sh to create least-privilege users
+      ETL_DB_USER: ${ETL_DB_USER}
+      ETL_DB_PASSWORD: ${ETL_DB_PASSWORD}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD}
+      POWERBI_DB_USER: ${POWERBI_DB_USER}
+      POWERBI_DB_PASSWORD: ${POWERBI_DB_PASSWORD}
+    ports:
+      - "${DB_PORT:-5432}:5432"            # DBeaver / Power BI on the host
+    volumes:
+      - pgdata:/var/lib/postgresql/data    # persistence
+      - ./sql/init:/docker-entrypoint-initdb.d:ro   # DDL runs only on an EMPTY volume
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  etl:
+    build: ./etl
+    environment:
+      <<: *db-env
+      SOURCE_FILE: /data/raw/${SOURCE_FILE_NAME}
+      PSEUDONYM_SALT: ${PSEUDONYM_SALT}
+      TZ: America/Bogota
+    volumes:
+      - ./data/raw:/data/raw:ro            # the Excel source (not versioned)
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"                          # batch job: runs once and exits
+
+  simulator:
+    build: ./etl
+    command: ["python", "-m", "etl.simulator"]
+    environment:
+      <<: *db-env
+      SIM_TICK_SECONDS: ${SIM_TICK_SECONDS:-30}
+      TZ: America/Bogota
+    depends_on:
+      etl:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  alert-sink:
+    build: ./etl
+    command: ["python", "-m", "etl.alert_sink"]
+    environment:
+      <<: *db-env
+      ALERT_SINK_PORT: "8085"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana-oss:11.3.0
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/operativo.json
+      GF_USERS_DEFAULT_LANGUAGE: es-ES
+      # interpolated inside provisioning/datasources/postgres.yml
+      POSTGRES_DB: ${POSTGRES_DB}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD}
+      TZ: America/Bogota
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      alert-sink:
+        condition: service_started
+
+volumes:
+  pgdata:
+  grafana-data:

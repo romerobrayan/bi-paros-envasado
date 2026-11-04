@@ -1,0 +1,23 @@
+# Contact point + notification policy. The webhook points to the alert-sink
+# service, which stores every notification in ops.alertas_recibidas so the
+# dashboard can prove that the alert fired and resolved.
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: alert-sink-webhook
+    receivers:
+      - uid: alert-sink
+        type: webhook
+        disableResolveMessage: false
+        settings:
+          url: http://alert-sink:8085/alertas
+          httpMethod: POST
+
+policies:
+  - orgId: 1
+    receiver: alert-sink-webhook
+    group_by: ['alertname', 'maquina']
+    group_wait: 5s
+    group_interval: 30s
+    repeat_interval: 15m

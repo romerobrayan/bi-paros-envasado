@@ -1,0 +1,22 @@
+# Provisioned automatically at Grafana start-up (no manual setup).
+# Credentials are interpolated from environment variables defined in .env.
+apiVersion: 1
+
+datasources:
+  - name: PostgreSQL DW
+    uid: pg-dw
+    type: grafana-postgresql-datasource
+    access: proxy
+    url: db:5432
+    user: ${GRAFANA_DB_USER}
+    isDefault: true
+    editable: false
+    jsonData:
+      database: ${POSTGRES_DB}
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false
+      maxOpenConns: 10
+      timeInterval: 10s
+    secureJsonData:
+      password: ${GRAFANA_DB_PASSWORD}

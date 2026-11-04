@@ -1,0 +1,77 @@
+# =============================================================================
+# Alert rule: hourly OEE below 60% for 2 consecutive (simulated) hours
+#
+# Why 60%: in the historical data the monthly OEE of the lines sits between
+# ~54% and ~80% (2023–2025). 60% is the lower edge of the normal range: an hour
+# under it means the line lost almost half of its capacity. Requiring TWO
+# consecutive hours (max of the last 2 hours < 60) filters one-off dips such as
+# a single changeover and avoids alert fatigue.
+#
+# The SQL returns one row per machine: string column -> label "maquina",
+# numeric column -> value. So ONE rule creates one alert instance per machine.
+# =============================================================================
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: oee-operativo
+    folder: Monitoreo envasado
+    interval: 30s
+    rules:
+      - uid: oee-bajo-2h
+        title: OEE por debajo de 60% durante 2 horas
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: pg-dw
+            model:
+              refId: A
+              datasource:
+                type: grafana-postgresql-datasource
+                uid: pg-dw
+              editorMode: code
+              format: table
+              rawQuery: true
+              rawSql: |-
+                SELECT m.maquina_nk           AS maquina,
+                       MAX(h.oee) * 100       AS oee_max_ultimas_2h
+                FROM (SELECT maquina_sk, oee,
+                             ROW_NUMBER() OVER (PARTITION BY maquina_sk ORDER BY ts DESC) AS rn
+                      FROM dw.fact_produccion_hora) h
+                JOIN dw.dim_maquina m ON m.maquina_sk = h.maquina_sk
+                WHERE h.rn <= 2
+                GROUP BY m.maquina_nk
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              datasource:
+                type: __expr__
+                uid: __expr__
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [60]
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        isPaused: false
+        labels:
+          severidad: critica
+          area: produccion
+        annotations:
+          __dashboardUid__: oee-operativo
+          __panelId__: "3"
+          summary: "OEE bajo en {{ $labels.maquina }}"
+          description: >-
+            La máquina {{ $labels.maquina }} lleva 2 horas con OEE por debajo de 60%
+            (máximo de las 2 últimas horas = {{ humanize $values.A.Value }}%).
+            Revisar causa principal en el tablero operativo.

@@ -1,0 +1,119 @@
+// =============================================================================
+// Medidas DAX del modelo semántico — BI de paros y productividad
+// Cómo usarlo: Power BI Desktop > Vista de consultas DAX > pegar todo este
+// archivo > en el CodeLens "Actualizar modelo: agregar N medidas nuevas" (o el
+// botón "Actualizar modelo con cambios") > Ejecutar para validar.
+// Requisitos: tablas renombradas sin el prefijo "dw " y la tabla vacía _Medidas
+// creada con "Introducir datos".
+//
+// Modelo de tiempo del OEE (igual que dw.vw_kpi_mensual_maquina):
+//   Disponibilidad = horas operativas / horas planificadas
+//   Rendimiento    = pacas / pacas ideales   (solo filas válidas, sin atípicos)
+//   Calidad        = 1 - horas de paro de calidad (11, 12) / horas operativas
+//   OEE            = Disponibilidad * Rendimiento * Calidad
+// Todas son RAZÓN DE SUMAS: nunca se promedian porcentajes.
+// =============================================================================
+DEFINE
+    // ---------- Bases: producción por turno ---------------------------------
+    MEASURE '_Medidas'[Horas Trabajadas] = SUM ( fact_produccion_turno[horas_trabajadas] )
+    MEASURE '_Medidas'[Horas Planificadas] = SUM ( fact_produccion_turno[horas_planificadas] )
+    MEASURE '_Medidas'[Horas Operativas] = SUM ( fact_produccion_turno[horas_operativas] )
+    MEASURE '_Medidas'[Horas No Programadas] = SUM ( fact_produccion_turno[horas_no_programadas] )
+    MEASURE '_Medidas'[Horas Paro Calidad] = SUM ( fact_produccion_turno[horas_paro_calidad] )
+    MEASURE '_Medidas'[Pacas Producidas] = SUM ( fact_produccion_turno[pacas_producidas] )
+    MEASURE '_Medidas'[Pacas Rendimiento] =
+        CALCULATE (
+            SUM ( fact_produccion_turno[pacas_producidas] ),
+            fact_produccion_turno[incluir_en_rendimiento] = TRUE ()
+        )
+    MEASURE '_Medidas'[Pacas Ideales] =
+        CALCULATE (
+            SUM ( fact_produccion_turno[pacas_ideales] ),
+            fact_produccion_turno[incluir_en_rendimiento] = TRUE ()
+        )
+    MEASURE '_Medidas'[Pacas por Hora] = DIVIDE ( [Pacas Producidas], [Horas Trabajadas] )
+
+    // ---------- OEE ----------------------------------------------------------
+    MEASURE '_Medidas'[Disponibilidad] = DIVIDE ( [Horas Operativas], [Horas Planificadas] )
+    MEASURE '_Medidas'[Rendimiento] = DIVIDE ( [Pacas Rendimiento], [Pacas Ideales] )
+    MEASURE '_Medidas'[Calidad] =
+        IF ( [Horas Operativas] > 0, 1 - DIVIDE ( [Horas Paro Calidad], [Horas Operativas] ) )
+    MEASURE '_Medidas'[OEE] = [Disponibilidad] * [Rendimiento] * [Calidad]
+    MEASURE '_Medidas'[Meta OEE] = 0.75
+    MEASURE '_Medidas'[Umbral Alerta OEE] = 0.60
+    MEASURE '_Medidas'[Brecha vs Meta (pp)] = IF ( NOT ISBLANK ( [OEE] ), [OEE] - [Meta OEE] )
+    MEASURE '_Medidas'[TEEP] =
+        [OEE] * DIVIDE ( [Horas Planificadas], [Horas Planificadas] + [Horas No Programadas] )
+
+    // ---------- Inteligencia de tiempo ----------------------------------------
+    MEASURE '_Medidas'[OEE Año Anterior] =
+        CALCULATE ( [OEE], SAMEPERIODLASTYEAR ( dim_fecha[fecha] ) )
+    MEASURE '_Medidas'[Var OEE vs Año Anterior (pp)] =
+        IF ( NOT ISBLANK ( [OEE] ) && NOT ISBLANK ( [OEE Año Anterior] ), [OEE] - [OEE Año Anterior] )
+    MEASURE '_Medidas'[Pacas Año Anterior] =
+        CALCULATE ( [Pacas Producidas], SAMEPERIODLASTYEAR ( dim_fecha[fecha] ) )
+    MEASURE '_Medidas'[Var Pacas vs Año Anterior %] =
+        DIVIDE ( [Pacas Producidas] - [Pacas Año Anterior], [Pacas Año Anterior] )
+    MEASURE '_Medidas'[Pacas Acumuladas Año (YTD)] = TOTALYTD ( [Pacas Producidas], dim_fecha[fecha] )
+    MEASURE '_Medidas'[Horas Paro Mes Anterior] =
+        CALCULATE ( [Horas Paro], DATEADD ( dim_fecha[fecha], -1, MONTH ) )
+    MEASURE '_Medidas'[OEE Móvil 3 Meses] =
+        CALCULATE (
+            [OEE],
+            DATESINPERIOD ( dim_fecha[fecha], MAX ( dim_fecha[fecha] ), -3, MONTH )
+        )
+
+    // ---------- Paros (P-MTO-22) ---------------------------------------------
+    MEASURE '_Medidas'[Horas Paro] = SUM ( fact_paro[horas_paro] )
+    MEASURE '_Medidas'[Minutos Paro] = SUM ( fact_paro[minutos_paro] )
+    MEASURE '_Medidas'[Eventos de Paro] = COUNTROWS ( fact_paro )
+    // % del tiempo trabajado que se fue en paros (indicador del P-MTO-22 por máquina, mes y año)
+    MEASURE '_Medidas'[% Paro sobre Horas Trabajadas] = DIVIDE ( [Horas Paro], [Horas Trabajadas] )
+    // participación de cada causa dentro del total de paro seleccionado
+    MEASURE '_Medidas'[% Participación Paro] =
+        DIVIDE ( [Horas Paro], CALCULATE ( [Horas Paro], ALLSELECTED ( dim_causa_paro ) ) )
+    MEASURE '_Medidas'[% Paro No Planificado] =
+        DIVIDE ( CALCULATE ( [Horas Paro], dim_causa_paro[es_planificado] = FALSE () ), [Horas Paro] )
+    // Pareto: % acumulado ordenando las causas de mayor a menor
+    MEASURE '_Medidas'[Pareto % Acumulado] =
+        VAR HorasActual = [Horas Paro]
+        VAR Total = CALCULATE ( [Horas Paro], ALLSELECTED ( dim_causa_paro ) )
+        VAR Acumulado =
+            SUMX (
+                FILTER (
+                    ALLSELECTED ( dim_causa_paro[codigo_label] ),
+                    CALCULATE ( [Horas Paro] ) >= HorasActual
+                ),
+                CALCULATE ( [Horas Paro] )
+            )
+        RETURN
+            IF ( NOT ISBLANK ( HorasActual ), DIVIDE ( Acumulado, Total ) )
+    MEASURE '_Medidas'[Línea 80%] = 0.8
+    MEASURE '_Medidas'[Ranking Causa] =
+        IF (
+            NOT ISBLANK ( [Horas Paro] ),
+            RANKX ( ALLSELECTED ( dim_causa_paro[codigo_label] ), [Horas Paro], , DESC, DENSE )
+        )
+
+    // ---------- Mantenimiento ------------------------------------------------
+    MEASURE '_Medidas'[Fallas] = CALCULATE ( COUNTROWS ( fact_paro ), fact_paro[evento_falla] = 1 )
+    MEASURE '_Medidas'[Horas Falla] = CALCULATE ( [Horas Paro], fact_paro[evento_falla] = 1 )
+    MEASURE '_Medidas'[MTTR (h)] = DIVIDE ( [Horas Falla], [Fallas] )
+    MEASURE '_Medidas'[MTBF (h)] = DIVIDE ( [Horas Operativas], [Fallas] )
+    // dimensión role-playing: persona involucrada en el ajuste operativo (código 05)
+    MEASURE '_Medidas'[Horas Paro por Persona Involucrada] =
+        CALCULATE (
+            [Horas Paro],
+            USERELATIONSHIP ( fact_paro[persona_involucrada_sk], dim_persona[persona_sk] )
+        )
+
+EVALUATE
+    SUMMARIZECOLUMNS (
+        dim_maquina[maquina_nk],
+        "OEE", [OEE],
+        "Disponibilidad", [Disponibilidad],
+        "Rendimiento", [Rendimiento],
+        "Calidad", [Calidad],
+        "Horas Paro", [Horas Paro],
+        "MTTR (h)", [MTTR (h)]
+    )

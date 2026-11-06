@@ -146,3 +146,4 @@ OEE = Availability × Performance × Quality. The time model and the indicator c
 | [01-design.md](docs/01-design.md) | Users, business questions, source diagnosis, KPI catalog, dimensional model, bus matrix, SCD |
 | [02-data-dictionary.md](docs/02-data-dictionary.md) | Every table: columns, types, keys, transformation rules, lineage |
 | [03-etl-and-data-quality.md](docs/03-etl-and-data-quality.md) | ETL design, cleaning rules with counts, reconciliation |
+| [04-powerbi-guide.md](docs/04-powerbi-guide.md) | Power BI connection, relationships, DAX measures (`powerbi/medidas.dax`) and report pages |

@@ -1,0 +1,86 @@
+table dim_referencia
+	lineageTag: f489cce3-eb44-4bbc-b74b-e79fefe374a2
+
+	column referencia_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 895ab06b-e9f9-495f-a4b8-9c9e86959e2c
+		summarizeBy: none
+		sourceColumn: referencia_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column Referencia
+		dataType: string
+		lineageTag: 24a65099-3d5b-4afa-b82c-b95d462ce534
+		summarizeBy: none
+		sourceColumn: Referencia
+
+		annotation SummarizationSetBy = Automatic
+
+	column marca
+		dataType: string
+		lineageTag: db3e8b0a-105e-457e-9527-96c857ae8370
+		summarizeBy: none
+		sourceColumn: marca
+
+		annotation SummarizationSetBy = Automatic
+
+	column presentacion_cc
+		dataType: int64
+		formatString: 0
+		lineageTag: 1cc3cedc-a480-4787-becb-8bd7106cf9f4
+		summarizeBy: sum
+		sourceColumn: presentacion_cc
+
+		annotation SummarizationSetBy = Automatic
+
+	column presentacion
+		dataType: string
+		lineageTag: 20534783-d93d-4a2b-bc0f-95099919898b
+		summarizeBy: none
+		sourceColumn: presentacion
+
+		annotation SummarizationSetBy = Automatic
+
+	column num_colores
+		dataType: int64
+		formatString: 0
+		lineageTag: 989bab39-960b-4e35-9aca-e3e8b218256a
+		summarizeBy: sum
+		sourceColumn: num_colores
+
+		annotation SummarizationSetBy = Automatic
+
+	column unidades_por_paca
+		dataType: int64
+		formatString: 0
+		lineageTag: 01a912f5-58c1-416e-baad-5d64ee386000
+		summarizeBy: sum
+		sourceColumn: unidades_por_paca
+
+		annotation SummarizationSetBy = Automatic
+
+	column en_catalogo
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 6ca6fc70-a016-4180-9c72-22acabbbfa6f
+		summarizeBy: none
+		sourceColumn: en_catalogo
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_referencia = m
+		mode: import
+		source =
+				let
+				    Origen = PostgreSQL.Database("localhost:5433", "bi_paros"),
+				    dw_dim_referencia = Origen{[Schema="dw",Item="dim_referencia"]}[Data],
+				    #"Columnas con nombre cambiado" = Table.RenameColumns(dw_dim_referencia,{{"referencia_nk", "Referencia"}})
+				in
+				    #"Columnas con nombre cambiado"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

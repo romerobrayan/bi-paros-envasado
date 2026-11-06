@@ -1,0 +1,33 @@
+createOrReplace
+
+	ref table dim_causa_paro
+
+		hierarchy 'Jerarquía Paros'
+
+			level 'Área de impacto'
+				column: area_impacto
+
+			level Código
+				column: codigo_label
+
+			level Sistema
+				column: sistema
+
+			level Componente
+				column: componente
+
+	ref table dim_fecha
+
+		hierarchy Calendario
+
+			level Año
+				column: anio
+
+			level Trimestre
+				column: trimestre
+
+			level Mes
+				column: nombre_mes
+
+			level Día
+				column: fecha

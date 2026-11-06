@@ -1,0 +1,143 @@
+table fact_paro
+	lineageTag: 15904f24-b5be-473b-bc1f-c9a6b4f0c104
+
+	column paro_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 7365f96a-d4e4-400a-aa57-051c82c73f9a
+		summarizeBy: sum
+		sourceColumn: paro_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column registro_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 1eb3e22c-aa9a-406c-9048-a49afade3ce8
+		summarizeBy: sum
+		sourceColumn: registro_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column registro_padre_id
+		dataType: int64
+		formatString: 0
+		lineageTag: c55c6b5a-190a-46bd-a24f-8f114efa8e23
+		summarizeBy: sum
+		sourceColumn: registro_padre_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column fecha_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: fb2a5856-a096-4dad-9506-830528652c17
+		summarizeBy: none
+		sourceColumn: fecha_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column turno_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: ca440e15-ceda-4155-a346-0524f1ffeb2a
+		summarizeBy: none
+		sourceColumn: turno_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column maquina_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 8f733a10-8aa9-4330-98cc-40814f972857
+		summarizeBy: none
+		sourceColumn: maquina_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column referencia_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: cbdd5a62-9f3d-4ae8-8be0-5b4143284e83
+		summarizeBy: none
+		sourceColumn: referencia_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column operario_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 86b6abe6-818f-4805-b3af-3d119f4f50a1
+		summarizeBy: sum
+		sourceColumn: operario_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column persona_involucrada_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 97b00ece-781c-4355-82c5-86d9f850aad5
+		summarizeBy: sum
+		sourceColumn: persona_involucrada_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column causa_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 4e601b59-c50e-474f-9faf-79ca53a22a2f
+		summarizeBy: none
+		sourceColumn: causa_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column agente_involucrado
+		dataType: string
+		lineageTag: 71fea6f4-d63f-4dce-b7a3-6ed5059cb7b4
+		summarizeBy: none
+		sourceColumn: agente_involucrado
+
+		annotation SummarizationSetBy = Automatic
+
+	column minutos_paro
+		dataType: double
+		lineageTag: fce6ff29-bbb6-4da5-8cb0-c9a44459c667
+		summarizeBy: sum
+		sourceColumn: minutos_paro
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column horas_paro
+		dataType: double
+		lineageTag: 3f1a2811-0757-48c7-aa5e-fbf931332141
+		summarizeBy: sum
+		sourceColumn: horas_paro
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column evento_falla
+		dataType: int64
+		formatString: 0
+		lineageTag: 631721b6-1edc-4dd7-83fd-4a2a6790e114
+		summarizeBy: sum
+		sourceColumn: evento_falla
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fact_paro = m
+		mode: import
+		source =
+				let
+				    Origen = PostgreSQL.Database("localhost:5433", "bi_paros"),
+				    dw_fact_paro = Origen{[Schema="dw",Item="fact_paro"]}[Data]
+				in
+				    dw_fact_paro
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

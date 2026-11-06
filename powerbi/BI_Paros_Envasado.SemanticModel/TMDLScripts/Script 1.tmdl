@@ -1,0 +1,173 @@
+createOrReplace
+
+	table _Medidas
+
+		measure 'Horas Trabajadas' = SUM(fact_produccion_turno[horas_trabajadas])
+			formatString: #,0.00
+			displayFolder: 1. Bases
+
+		measure 'Horas Planificadas' = SUM(fact_produccion_turno[horas_planificadas])
+			formatString: #,0.00
+			displayFolder: 1. Bases
+
+		measure 'Horas Operativas' = SUM(fact_produccion_turno[horas_operativas])
+			formatString: #,0.00
+			displayFolder: 1. Bases
+
+		measure 'Horas No Programadas' = SUM(fact_produccion_turno[horas_no_programadas])
+			formatString: #,0.00
+			displayFolder: 1. Bases
+
+		measure 'Horas Paro Calidad' = SUM(fact_produccion_turno[horas_paro_calidad])
+			formatString: #,0.00
+			displayFolder: 1. Bases
+
+		measure 'Pacas Producidas' = SUM(fact_produccion_turno[pacas_producidas])
+			formatString: #,0
+			displayFolder: 1. Bases
+
+		measure 'Pacas Rendimiento' = CALCULATE(SUM(fact_produccion_turno[pacas_producidas]), fact_produccion_turno[incluir_en_rendimiento] = TRUE())
+			formatString: #,0
+			displayFolder: 1. Bases
+
+		measure 'Pacas Ideales' = CALCULATE(SUM(fact_produccion_turno[pacas_ideales]), fact_produccion_turno[incluir_en_rendimiento] = TRUE())
+			formatString: #,0
+			displayFolder: 1. Bases
+
+		measure 'Pacas por Hora' = DIVIDE([Pacas Producidas], [Horas Trabajadas])
+			formatString: #,0.00
+			displayFolder: 1. Bases
+
+		measure 'Disponibilidad' = DIVIDE([Horas Operativas], [Horas Planificadas])
+			formatString: 0.0%
+			displayFolder: 2. OEE
+
+		measure 'Rendimiento' = DIVIDE([Pacas Rendimiento], [Pacas Ideales])
+			formatString: 0.0%
+			displayFolder: 2. OEE
+
+		measure 'Calidad' = IF([Horas Operativas] > 0, 1 - DIVIDE([Horas Paro Calidad], [Horas Operativas]))
+			formatString: 0.0%
+			displayFolder: 2. OEE
+
+		measure 'OEE' = [Disponibilidad] * [Rendimiento] * [Calidad]
+			formatString: 0.0%
+			displayFolder: 2. OEE
+
+		measure 'Meta OEE' = 0.75
+			formatString: 0.0%
+			displayFolder: 2. OEE
+
+		measure 'Umbral Alerta OEE' = 0.60
+			formatString: 0.0%
+			displayFolder: 2. OEE
+
+		measure 'Brecha vs Meta (pp)' = IF(NOT ISBLANK([OEE]), [OEE] - [Meta OEE])
+			formatString: 0.0%
+			displayFolder: 2. OEE
+
+		measure 'TEEP' = [OEE] * DIVIDE([Horas Planificadas], [Horas Planificadas] + [Horas No Programadas])
+			formatString: 0.0%
+			displayFolder: 2. OEE
+
+		measure 'OEE Año Anterior' = CALCULATE([OEE], SAMEPERIODLASTYEAR(dim_fecha[fecha]))
+			formatString: 0.0%
+			displayFolder: 3. Inteligencia de tiempo
+
+		measure 'Var OEE vs Año Anterior (pp)' = IF(NOT ISBLANK([OEE]) && NOT ISBLANK([OEE Año Anterior]), [OEE] - [OEE Año Anterior])
+			formatString: 0.0%
+			displayFolder: 3. Inteligencia de tiempo
+
+		measure 'Pacas Año Anterior' = CALCULATE([Pacas Producidas], SAMEPERIODLASTYEAR(dim_fecha[fecha]))
+			formatString: #,0
+			displayFolder: 3. Inteligencia de tiempo
+
+		measure 'Var Pacas vs Año Anterior %' = DIVIDE([Pacas Producidas] - [Pacas Año Anterior], [Pacas Año Anterior])
+			formatString: 0.0%
+			displayFolder: 3. Inteligencia de tiempo
+
+		measure 'Pacas Acumuladas Año (YTD)' = TOTALYTD([Pacas Producidas], dim_fecha[fecha])
+			formatString: #,0
+			displayFolder: 3. Inteligencia de tiempo
+
+		measure 'Horas Paro Mes Anterior' = CALCULATE([Horas Paro], DATEADD(dim_fecha[fecha], -1, MONTH))
+			formatString: #,0.00
+			displayFolder: 3. Inteligencia de tiempo
+
+		measure 'OEE Móvil 3 Meses' = CALCULATE([OEE], DATESINPERIOD(dim_fecha[fecha], MAX(dim_fecha[fecha]), -3, MONTH))
+			formatString: 0.0%
+			displayFolder: 3. Inteligencia de tiempo
+
+		measure 'Horas Paro' = SUM(fact_paro[horas_paro])
+			formatString: #,0.00
+			displayFolder: 4. Paros
+
+		measure 'Minutos Paro' = SUM(fact_paro[minutos_paro])
+			formatString: #,0
+			displayFolder: 4. Paros
+
+		measure 'Eventos de Paro' = COUNTROWS(fact_paro)
+			formatString: #,0
+			displayFolder: 4. Paros
+
+		measure '% Paro sobre Horas Trabajadas' = DIVIDE([Horas Paro], [Horas Trabajadas])
+			formatString: 0.0%
+			displayFolder: 4. Paros
+
+		measure '% Participación Paro' = DIVIDE([Horas Paro], CALCULATE([Horas Paro], ALLSELECTED(dim_causa_paro)))
+			formatString: 0.0%
+			displayFolder: 4. Paros
+
+		measure '% Paro No Planificado' = DIVIDE(CALCULATE([Horas Paro], dim_causa_paro[es_planificado] = FALSE()), [Horas Paro])
+			formatString: 0.0%
+			displayFolder: 4. Paros
+
+		measure 'Pareto % Acumulado' =
+				VAR HorasActual = [Horas Paro]
+				VAR Total = CALCULATE([Horas Paro], ALLSELECTED(dim_causa_paro))
+				VAR Acumulado =
+				    SUMX(
+				        FILTER(ALLSELECTED(dim_causa_paro[codigo_label]), CALCULATE([Horas Paro]) >= HorasActual),
+				        CALCULATE([Horas Paro])
+				    )
+				RETURN IF(NOT ISBLANK(HorasActual), DIVIDE(Acumulado, Total))
+			formatString: 0.0%
+			displayFolder: 4. Paros
+
+		measure 'Línea 80%' = 0.8
+			formatString: 0.0%
+			displayFolder: 4. Paros
+
+		measure 'Ranking Causa' = IF(NOT ISBLANK([Horas Paro]), RANKX(ALLSELECTED(dim_causa_paro[codigo_label]), [Horas Paro], , DESC, DENSE))
+			formatString: #,0
+			displayFolder: 4. Paros
+
+		measure 'Fallas' = CALCULATE(COUNTROWS(fact_paro), fact_paro[evento_falla] = 1)
+			formatString: #,0
+			displayFolder: 5. Mantenimiento
+
+		measure 'Horas Falla' = CALCULATE([Horas Paro], fact_paro[evento_falla] = 1)
+			formatString: #,0.00
+			displayFolder: 5. Mantenimiento
+
+		measure 'MTTR (h)' = DIVIDE([Horas Falla], [Fallas])
+			formatString: #,0.00
+			displayFolder: 5. Mantenimiento
+
+		measure 'MTBF (h)' = DIVIDE([Horas Operativas], [Fallas])
+			formatString: #,0.00
+			displayFolder: 5. Mantenimiento
+
+		measure 'Horas Paro por Persona Involucrada' = CALCULATE([Horas Paro], USERELATIONSHIP(fact_paro[persona_involucrada_sk], dim_persona[persona_sk]))
+			formatString: #,0.00
+			displayFolder: 5. Mantenimiento
+
+		column Medidas
+			dataType: string
+			isHidden
+			isNameInferred
+			sourceColumn: [Medidas]
+
+		partition _Medidas = calculated
+			mode: import
+			source = ROW("Medidas", "")

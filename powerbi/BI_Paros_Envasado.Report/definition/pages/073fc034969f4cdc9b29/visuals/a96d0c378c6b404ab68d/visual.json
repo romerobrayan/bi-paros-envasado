@@ -1,0 +1,98 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "a96d0c378c6b404ab68d",
+  "position": {
+    "x": 1220,
+    "y": 610,
+    "z": 3,
+    "height": 450,
+    "width": 680,
+    "tabOrder": 3
+  },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_maquina"
+                    }
+                  },
+                  "Property": "Máquina"
+                }
+              },
+              "queryRef": "dim_maquina.maquina_nk",
+              "nativeQueryRef": "maquina_nk",
+              "active": true
+            }
+          ]
+        },
+        "Series": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Clase OEE"
+                }
+              },
+              "queryRef": "dim_causa_paro.clase_oee",
+              "nativeQueryRef": "clase_oee",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "% Paro sobre Horas Trabajadas"
+                }
+              },
+              "queryRef": "_Medidas.% Paro sobre Horas Trabajadas",
+              "nativeQueryRef": "% Paro sobre Horas Trabajadas"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'% de paro sobre horas trabajadas (P-MTO-22)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

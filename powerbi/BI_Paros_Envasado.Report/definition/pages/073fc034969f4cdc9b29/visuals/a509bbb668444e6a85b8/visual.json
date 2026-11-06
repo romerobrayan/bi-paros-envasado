@@ -1,0 +1,152 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "a509bbb668444e6a85b8",
+  "position": {
+    "x": 1220,
+    "y": 130,
+    "z": 1,
+    "height": 460,
+    "width": 680,
+    "tabOrder": 1
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Área"
+                }
+              },
+              "queryRef": "dim_causa_paro.area_impacto",
+              "nativeQueryRef": "area_impacto",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Código"
+                }
+              },
+              "queryRef": "dim_causa_paro.codigo_label",
+              "nativeQueryRef": "codigo_label",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Sistema"
+                }
+              },
+              "queryRef": "dim_causa_paro.sistema",
+              "nativeQueryRef": "sistema",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Componente"
+                }
+              },
+              "queryRef": "dim_causa_paro.componente",
+              "nativeQueryRef": "componente",
+              "active": true
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "Horas Paro"
+                }
+              },
+              "queryRef": "_Medidas.Horas Paro",
+              "nativeQueryRef": "Horas Paro"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "% Participación Paro"
+                }
+              },
+              "queryRef": "_Medidas.% Participación Paro",
+              "nativeQueryRef": "% Participación Paro"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "Eventos de Paro"
+                }
+              },
+              "queryRef": "_Medidas.Eventos de Paro",
+              "nativeQueryRef": "Eventos de Paro"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Jerarquía de paros: Área > Código > Sistema > Componente (drill-down)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

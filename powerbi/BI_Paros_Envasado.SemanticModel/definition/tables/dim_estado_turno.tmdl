@@ -1,0 +1,50 @@
+table dim_estado_turno
+	lineageTag: 8e080447-684a-44e0-b4f8-32e3b65e9fc3
+
+	column estado_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: b6a03660-4ddf-4e91-ad72-64bb48f628c9
+		summarizeBy: none
+		sourceColumn: estado_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column estado_nk
+		dataType: string
+		lineageTag: a509a887-e8cc-48a1-871c-2d3ad5a736df
+		summarizeBy: none
+		sourceColumn: estado_nk
+
+		annotation SummarizationSetBy = Automatic
+
+	column Categoría
+		dataType: string
+		lineageTag: b5cf8bb5-cd6a-41b6-b342-edc5ae119f22
+		summarizeBy: none
+		sourceColumn: Categoría
+
+		annotation SummarizationSetBy = Automatic
+
+	column codigo_unificado
+		dataType: string
+		lineageTag: 980da862-284a-448c-99af-c81caa9de6f2
+		summarizeBy: none
+		sourceColumn: codigo_unificado
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_estado_turno = m
+		mode: import
+		source =
+				let
+				    Origen = PostgreSQL.Database("localhost:5433", "bi_paros"),
+				    dw_dim_estado_turno = Origen{[Schema="dw",Item="dim_estado_turno"]}[Data],
+				    #"Columnas con nombre cambiado" = Table.RenameColumns(dw_dim_estado_turno,{{"categoria", "Categoría"}})
+				in
+				    #"Columnas con nombre cambiado"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

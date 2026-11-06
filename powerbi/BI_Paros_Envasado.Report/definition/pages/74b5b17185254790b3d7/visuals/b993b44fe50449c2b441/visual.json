@@ -1,0 +1,161 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "b993b44fe50449c2b441",
+  "position": {
+    "x": 20,
+    "y": 300,
+    "z": 3,
+    "height": 380,
+    "width": 900,
+    "tabOrder": 3
+  },
+  "visual": {
+    "visualType": "lineClusteredColumnComboChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_maquina"
+                    }
+                  },
+                  "Property": "Máquina"
+                }
+              },
+              "queryRef": "dim_maquina.maquina_nk",
+              "nativeQueryRef": "maquina_nk",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "MTBF (h)"
+                }
+              },
+              "queryRef": "_Medidas.MTBF (h)",
+              "nativeQueryRef": "MTBF (h)"
+            }
+          ]
+        },
+        "Y2": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "MTTR (h)"
+                }
+              },
+              "queryRef": "_Medidas.MTTR (h)",
+              "nativeQueryRef": "MTTR (h)"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "_Medidas"
+                  }
+                },
+                "Property": "MTBF (h)"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'MTBF y MTTR por máquina'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "2e3c952c01726305c07a",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_maquina"
+              }
+            },
+            "Property": "Máquina"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "68fd8fd9d7a11eca29a0",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Medidas"
+              }
+            },
+            "Property": "MTBF (h)"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "2d4c393563cb6c9cc3ac",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Medidas"
+              }
+            },
+            "Property": "MTTR (h)"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

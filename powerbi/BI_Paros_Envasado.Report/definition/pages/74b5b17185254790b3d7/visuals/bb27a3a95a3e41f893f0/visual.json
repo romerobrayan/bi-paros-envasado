@@ -1,0 +1,60 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "bb27a3a95a3e41f893f0",
+  "position": {
+    "x": 650,
+    "y": 130,
+    "z": 1,
+    "width": 600,
+    "height": 150,
+    "tabOrder": 1
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "MTTR (h)"
+                }
+              },
+              "queryRef": "_Medidas.MTTR (h)",
+              "nativeQueryRef": "MTTR (h)"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'MTTR (h)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

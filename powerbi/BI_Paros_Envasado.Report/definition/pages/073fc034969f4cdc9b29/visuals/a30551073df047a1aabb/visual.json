@@ -1,0 +1,154 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "a30551073df047a1aabb",
+  "position": {
+    "x": 20,
+    "y": 610,
+    "z": 2,
+    "height": 450,
+    "width": 1180,
+    "tabOrder": 2
+  },
+  "visual": {
+    "visualType": "decompositionTreeVisual",
+    "query": {
+      "queryState": {
+        "Analyze": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "Horas Paro"
+                }
+              },
+              "queryRef": "_Medidas.Horas Paro",
+              "nativeQueryRef": "Horas Paro"
+            }
+          ]
+        },
+        "ExplainBy": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Área"
+                }
+              },
+              "queryRef": "dim_causa_paro.area_impacto",
+              "nativeQueryRef": "area_impacto",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Código"
+                }
+              },
+              "queryRef": "dim_causa_paro.codigo_label",
+              "nativeQueryRef": "codigo_label",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Sistema"
+                }
+              },
+              "queryRef": "dim_causa_paro.sistema",
+              "nativeQueryRef": "sistema",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Componente"
+                }
+              },
+              "queryRef": "dim_causa_paro.componente",
+              "nativeQueryRef": "componente",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_maquina"
+                    }
+                  },
+                  "Property": "Máquina"
+                }
+              },
+              "queryRef": "dim_maquina.maquina_nk",
+              "nativeQueryRef": "maquina_nk",
+              "active": true
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "tree": [
+        {
+          "properties": {
+            "effectiveBarsPerLevel": {
+              "expr": {
+                "Literal": {
+                  "Value": "4L"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Árbol de descomposición de horas de paro'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

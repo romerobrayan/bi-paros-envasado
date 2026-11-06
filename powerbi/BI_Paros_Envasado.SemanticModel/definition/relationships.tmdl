@@ -1,0 +1,63 @@
+relationship fcf2bcd6-a86f-428b-ac38-c83fd5e60e97
+	joinOnDateBehavior: datePartOnly
+	fromColumn: dim_maquina.vigente_desde
+	toColumn: LocalDateTable_19d77e51-a96a-44e8-a0f5-310083c9612d.Date
+
+relationship 28fdb774-12d7-498c-89bf-f88b78dcef4e
+	joinOnDateBehavior: datePartOnly
+	fromColumn: dim_maquina.vigente_hasta
+	toColumn: LocalDateTable_930db79d-8377-45b8-a9e8-11ec0180f248.Date
+
+relationship AutoDetected_61d656e6-7c9b-4664-b536-e1aaa71bc59c
+	fromColumn: fact_paro.causa_sk
+	toColumn: dim_causa_paro.causa_sk
+
+relationship AutoDetected_ff0bc300-2476-4741-b4da-d357401e8700
+	fromColumn: fact_produccion_turno.estado_sk
+	toColumn: dim_estado_turno.estado_sk
+
+relationship AutoDetected_c8c2f669-25d2-4547-9bf3-00fd91b4b33e
+	fromColumn: fact_paro.fecha_sk
+	toColumn: dim_fecha.fecha_sk
+
+relationship AutoDetected_416df449-800c-4980-ac7c-35e2f67a0b40
+	fromColumn: fact_produccion_turno.fecha_sk
+	toColumn: dim_fecha.fecha_sk
+
+relationship AutoDetected_04712d9e-0a18-48b7-9e3a-eb77ce438104
+	fromColumn: fact_paro.maquina_sk
+	toColumn: dim_maquina.maquina_sk
+
+relationship AutoDetected_e88d8131-bc18-4e6c-a979-da2ede69a147
+	fromColumn: fact_produccion_turno.maquina_sk
+	toColumn: dim_maquina.maquina_sk
+
+relationship AutoDetected_5a26728e-0495-405f-b820-f8d04b43130a
+	fromColumn: fact_paro.referencia_sk
+	toColumn: dim_referencia.referencia_sk
+
+relationship AutoDetected_cddcaed6-2aab-4a80-894c-e097633fdd24
+	fromColumn: fact_produccion_turno.referencia_sk
+	toColumn: dim_referencia.referencia_sk
+
+relationship AutoDetected_154fbf01-3b0e-4112-b975-f2ed0e2b3654
+	fromColumn: fact_paro.turno_sk
+	toColumn: dim_turno.turno_sk
+
+relationship AutoDetected_902cd582-c038-4e60-861e-2c34844d61ba
+	fromColumn: fact_produccion_turno.turno_sk
+	toColumn: dim_turno.turno_sk
+
+relationship rel_fpt_operario
+	fromColumn: fact_produccion_turno.operario_sk
+	toColumn: dim_persona.persona_sk
+
+relationship rel_fp_operario
+	fromColumn: fact_paro.operario_sk
+	toColumn: dim_persona.persona_sk
+
+relationship rel_fp_persona_involucrada
+	isActive: false
+	fromColumn: fact_paro.persona_involucrada_sk
+	toColumn: dim_persona.persona_sk
+

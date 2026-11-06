@@ -1,0 +1,144 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "4c2414ef4b7047fd803a",
+  "position": {
+    "x": 20,
+    "y": 700,
+    "z": 5,
+    "height": 360,
+    "width": 1880,
+    "tabOrder": 5
+  },
+  "visual": {
+    "visualType": "lineChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_fecha"
+                    }
+                  },
+                  "Property": "Año-Mes"
+                }
+              },
+              "queryRef": "dim_fecha.anio_mes",
+              "nativeQueryRef": "anio_mes",
+              "active": true
+            }
+          ]
+        },
+        "Series": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Código"
+                }
+              },
+              "queryRef": "dim_causa_paro.codigo_label",
+              "nativeQueryRef": "codigo_label",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "Horas Paro"
+                }
+              },
+              "queryRef": "_Medidas.Horas Paro",
+              "nativeQueryRef": "Horas Paro"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Horas de paro por código en el tiempo'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "78b99d597243a5032d92",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_fecha"
+              }
+            },
+            "Property": "Año-Mes"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "812083fc6d3e316b6dd0",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Medidas"
+              }
+            },
+            "Property": "Horas Paro"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "52004b00a6a18edc90ce",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_causa_paro"
+              }
+            },
+            "Property": "Código"
+          }
+        },
+        "type": "Categorical"
+      }
+    ]
+  }
+}

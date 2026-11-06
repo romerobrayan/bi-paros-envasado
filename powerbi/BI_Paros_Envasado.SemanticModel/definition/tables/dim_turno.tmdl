@@ -1,0 +1,83 @@
+table dim_turno
+	lineageTag: 83192ba7-7dbe-4ff3-aead-247e36332796
+
+	column turno_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: c7de9669-e41c-4e76-8ecb-88f60b5c0ca7
+		summarizeBy: none
+		sourceColumn: turno_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno
+		dataType: string
+		lineageTag: 55ac1fef-da79-4291-b339-ccfac2823734
+		summarizeBy: none
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+	column hora_inicio
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: ef486dc2-24b5-49ca-839e-f01c4ff0100d
+		summarizeBy: none
+		sourceColumn: hora_inicio
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column hora_fin
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 9f361aad-91d3-4b07-b6e3-fdfd0c3c0a7c
+		summarizeBy: none
+		sourceColumn: hora_fin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column duracion_h
+		dataType: double
+		lineageTag: c37ac70a-a319-4a78-b4eb-72cf792e6cfb
+		summarizeBy: sum
+		sourceColumn: duracion_h
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column esquema
+		dataType: string
+		lineageTag: 5e139e1b-6a88-4f31-bcd9-90577b88c8f9
+		summarizeBy: none
+		sourceColumn: esquema
+
+		annotation SummarizationSetBy = Automatic
+
+	column es_nocturno
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 9fa5af84-8fd6-4e95-ba62-5874e721bdf1
+		summarizeBy: none
+		sourceColumn: es_nocturno
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_turno = m
+		mode: import
+		source =
+				let
+				    Origen = PostgreSQL.Database("localhost:5433", "bi_paros"),
+				    dw_dim_turno = Origen{[Schema="dw",Item="dim_turno"]}[Data],
+				    #"Columnas con nombre cambiado" = Table.RenameColumns(dw_dim_turno,{{"turno_nk", "Turno"}})
+				in
+				    #"Columnas con nombre cambiado"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

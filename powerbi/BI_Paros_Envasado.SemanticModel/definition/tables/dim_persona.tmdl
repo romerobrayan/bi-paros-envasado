@@ -1,0 +1,41 @@
+table dim_persona
+	lineageTag: 9789035e-c722-415b-867b-ee8fa8ec2a40
+
+	column persona_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: cc9b0bf7-9afe-42c5-91f6-034bba431ba9
+		summarizeBy: sum
+		sourceColumn: persona_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column seudonimo
+		dataType: string
+		lineageTag: 2dcfda20-83a1-46aa-a184-16ceaf9bc0fb
+		summarizeBy: none
+		sourceColumn: seudonimo
+
+		annotation SummarizationSetBy = Automatic
+
+	column rol_principal
+		dataType: string
+		lineageTag: e95b8dd6-c2f7-4332-9361-a057a2ea2a27
+		summarizeBy: none
+		sourceColumn: rol_principal
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_persona = m
+		mode: import
+		source =
+				let
+				    Origen = PostgreSQL.Database("localhost:5433", "bi_paros"),
+				    dw_dim_persona = Origen{[Schema="dw",Item="dim_persona"]}[Data]
+				in
+				    dw_dim_persona
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

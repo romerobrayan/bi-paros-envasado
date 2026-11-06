@@ -1,0 +1,143 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 50,
+            "y": 675.0120800064866
+          },
+          "nodeIndex": "dim_causa_paro",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 673.75791294804139,
+            "y": 725.63262385298606
+          },
+          "nodeIndex": "dim_estado_turno",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 50.850606869712436,
+            "y": 299.66297077796486
+          },
+          "nodeIndex": "dim_fecha",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 330.53743729352624,
+            "y": -50
+          },
+          "nodeIndex": "dim_maquina",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1144.0745159985386,
+            "y": 436.50604000324324
+          },
+          "nodeIndex": "dim_persona",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 910.07451599853846,
+            "y": 304.94831106771534
+          },
+          "nodeIndex": "dim_referencia",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 767.22549073496816,
+            "y": 4.436383755824636
+          },
+          "nodeIndex": "dim_turno",
+          "size": {
+            "height": 248,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 337.04216567052674,
+            "y": 395.08571103812096
+          },
+          "nodeIndex": "fact_paro",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 623.38591656994959,
+            "y": 305.85588021150647
+          },
+          "nodeIndex": "fact_produccion_turno",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1378.0745159985386,
+            "y": 362.50604000324324
+          },
+          "nodeIndex": "_Medidas",
+          "nodeLineageTag": "c7f12f55-86c7-4576-a0aa-b8cd9d0d97d9",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Todas las tablas",
+      "zoomValue": 76.354735674931348,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "Todas las tablas",
+  "defaultDiagram": "Todas las tablas"
+}

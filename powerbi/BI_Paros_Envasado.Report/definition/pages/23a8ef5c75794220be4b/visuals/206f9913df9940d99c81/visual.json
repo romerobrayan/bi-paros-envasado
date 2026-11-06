@@ -1,0 +1,78 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "206f9913df9940d99c81",
+  "position": {
+    "x": 1280,
+    "y": 300,
+    "z": 6,
+    "width": 620,
+    "height": 420,
+    "tabOrder": 6
+  },
+  "visual": {
+    "visualType": "gauge",
+    "query": {
+      "queryState": {
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "OEE"
+                }
+              },
+              "queryRef": "_Medidas.OEE",
+              "nativeQueryRef": "OEE"
+            }
+          ]
+        },
+        "TargetValue": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "Meta OEE"
+                }
+              },
+              "queryRef": "_Medidas.Meta OEE",
+              "nativeQueryRef": "Meta OEE"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'OEE frente a la meta (75%)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "686533d5589248fc8629",
+  "position": {
+    "x": 980,
+    "y": 570,
+    "z": 3,
+    "height": 490,
+    "width": 920,
+    "tabOrder": 3
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_turno"
+                    }
+                  },
+                  "Property": "Turno"
+                }
+              },
+              "queryRef": "dim_turno.turno_nk",
+              "nativeQueryRef": "turno_nk",
+              "active": true
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "Pacas por Hora"
+                }
+              },
+              "queryRef": "_Medidas.Pacas por Hora",
+              "nativeQueryRef": "Pacas por Hora"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "Disponibilidad"
+                }
+              },
+              "queryRef": "_Medidas.Disponibilidad",
+              "nativeQueryRef": "Disponibilidad"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Pacas por hora y disponibilidad por turno'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "ac879c3b30680c548697",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_turno"
+              }
+            },
+            "Property": "Turno"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "78fcf354c85bb001cad2",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Medidas"
+              }
+            },
+            "Property": "Pacas por Hora"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "ac851912031e5204b017",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Medidas"
+              }
+            },
+            "Property": "Disponibilidad"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

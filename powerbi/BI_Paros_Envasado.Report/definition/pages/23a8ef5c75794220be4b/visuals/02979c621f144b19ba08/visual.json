@@ -1,0 +1,195 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "02979c621f144b19ba08",
+  "position": {
+    "x": 980,
+    "y": 740,
+    "z": 8,
+    "height": 320,
+    "width": 920,
+    "tabOrder": 8
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_maquina"
+                    }
+                  },
+                  "Property": "Máquina"
+                }
+              },
+              "queryRef": "dim_maquina.maquina_nk",
+              "nativeQueryRef": "Máquina",
+              "active": true
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "OEE"
+                }
+              },
+              "queryRef": "_Medidas.OEE",
+              "nativeQueryRef": "OEE"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "Var OEE vs Año Anterior (pp)"
+                }
+              },
+              "queryRef": "_Medidas.Var OEE vs Año Anterior (pp)",
+              "nativeQueryRef": "Var OEE vs Año Anterior (pp)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "TEEP"
+                }
+              },
+              "queryRef": "_Medidas.TEEP",
+              "nativeQueryRef": "TEEP"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "Horas Paro"
+                }
+              },
+              "queryRef": "_Medidas.Horas Paro",
+              "nativeQueryRef": "Horas Paro"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Resumen por máquina'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "05fb58c9d97501902645",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_maquina"
+              }
+            },
+            "Property": "Máquina"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "e05c219b59d9e8c7695c",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Medidas"
+              }
+            },
+            "Property": "OEE"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "7bde2bfceab6c1d9038b",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Medidas"
+              }
+            },
+            "Property": "Var OEE vs Año Anterior (pp)"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "94713c692395d60c5486",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Medidas"
+              }
+            },
+            "Property": "TEEP"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "f7d671b9e0036d09de36",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Medidas"
+              }
+            },
+            "Property": "Horas Paro"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

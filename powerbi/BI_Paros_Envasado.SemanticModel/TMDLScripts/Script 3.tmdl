@@ -1,0 +1,17 @@
+createOrReplace
+
+	ref table dim_fecha
+
+		column nombre_mes
+			dataType: string
+			sourceColumn: nombre_mes
+			sortByColumn: mes
+			summarizeBy: none
+
+	ref table dim_causa_paro
+
+		column codigo_label
+			dataType: string
+			sourceColumn: codigo_label
+			sortByColumn: codigo
+			summarizeBy: none

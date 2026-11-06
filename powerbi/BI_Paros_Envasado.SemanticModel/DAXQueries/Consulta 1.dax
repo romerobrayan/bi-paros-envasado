@@ -1,0 +1,11 @@
+EVALUATE
+SUMMARIZECOLUMNS(
+    dim_maquina[maquina_nk],
+    "OEE", [OEE],
+    "Disponibilidad", [Disponibilidad],
+    "Rendimiento", [Rendimiento],
+    "Calidad", [Calidad],
+    "Horas Paro", [Horas Paro],
+    "MTTR", [MTTR (h)],
+    "OEE AA 2025", CALCULATE([OEE Año Anterior], dim_fecha[anio] = 2025)
+)

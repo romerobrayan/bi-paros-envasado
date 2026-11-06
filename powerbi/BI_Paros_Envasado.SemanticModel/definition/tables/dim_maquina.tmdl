@@ -1,0 +1,109 @@
+table dim_maquina
+	lineageTag: 6c18eeb0-5630-474a-9dd8-7b9682ad6195
+
+	column maquina_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 8e507e02-8893-477f-9d96-c246bb4cd593
+		summarizeBy: none
+		sourceColumn: maquina_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column Máquina
+		dataType: string
+		lineageTag: d3b41433-3a66-4ffe-b795-676c5195050c
+		summarizeBy: none
+		sourceColumn: Máquina
+
+		annotation SummarizationSetBy = Automatic
+
+	column planta
+		dataType: string
+		lineageTag: e344f9f9-0486-4a63-ac97-d71ee011efb7
+		summarizeBy: none
+		sourceColumn: planta
+
+		annotation SummarizationSetBy = Automatic
+
+	column linea
+		dataType: string
+		lineageTag: f8209305-5997-4606-b7d4-1150548b0874
+		summarizeBy: none
+		sourceColumn: linea
+
+		annotation SummarizationSetBy = Automatic
+
+	column velocidad_ideal_upm
+		dataType: double
+		lineageTag: e37ce784-aa8f-4a9f-8bd6-727a8d08d7e7
+		summarizeBy: sum
+		sourceColumn: velocidad_ideal_upm
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column vigente_desde
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 1bd95b0c-ced4-4422-bb4f-645bfd5fbf89
+		summarizeBy: none
+		sourceColumn: vigente_desde
+
+		variation Variation
+			isDefault
+			relationship: fcf2bcd6-a86f-428b-ac38-c83fd5e60e97
+			defaultHierarchy: LocalDateTable_19d77e51-a96a-44e8-a0f5-310083c9612d.'Jerarquía de fechas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column vigente_hasta
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 7b6d747e-f0f1-4930-9b7a-d26d14e2681b
+		summarizeBy: none
+		sourceColumn: vigente_hasta
+
+		variation Variation
+			isDefault
+			relationship: 28fdb774-12d7-498c-89bf-f88b78dcef4e
+			defaultHierarchy: LocalDateTable_930db79d-8377-45b8-a9e8-11ec0180f248.'Jerarquía de fechas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column es_actual
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 7ed4812c-63dd-47ae-b048-0f4562471475
+		summarizeBy: none
+		sourceColumn: es_actual
+
+		annotation SummarizationSetBy = Automatic
+
+	column motivo_version
+		dataType: string
+		lineageTag: 39c85eac-f55b-45d9-974d-fc90181ef6a6
+		summarizeBy: none
+		sourceColumn: motivo_version
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_maquina = m
+		mode: import
+		source =
+				let
+				    Origen = PostgreSQL.Database("localhost:5433", "bi_paros"),
+				    dw_dim_maquina = Origen{[Schema="dw",Item="dim_maquina"]}[Data],
+				    #"Columnas con nombre cambiado" = Table.RenameColumns(dw_dim_maquina,{{"maquina_nk", "Máquina"}})
+				in
+				    #"Columnas con nombre cambiado"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

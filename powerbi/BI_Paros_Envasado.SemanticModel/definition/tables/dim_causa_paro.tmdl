@@ -1,0 +1,151 @@
+table dim_causa_paro
+	lineageTag: 056e7ceb-4c96-49ba-9596-12da5926d595
+
+	column causa_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 596869ce-013d-43bf-96fd-f3a903c90bb3
+		summarizeBy: none
+		sourceColumn: causa_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column causa_nk
+		dataType: string
+		lineageTag: eb153f44-52e3-4f6d-b50e-283dcfe0c340
+		summarizeBy: none
+		sourceColumn: causa_nk
+
+		annotation SummarizationSetBy = Automatic
+
+	column Área
+		dataType: string
+		lineageTag: cdc982a3-7853-4345-b6d9-9d4f2dddf251
+		summarizeBy: none
+		sourceColumn: Área
+
+		annotation SummarizationSetBy = Automatic
+
+	column codigo
+		dataType: int64
+		formatString: 0
+		lineageTag: 583377a0-4e50-410f-b5ca-d855da34e50a
+		summarizeBy: none
+		sourceColumn: codigo
+
+		annotation SummarizationSetBy = Automatic
+
+	column codigo_txt
+		dataType: string
+		lineageTag: 90ad3a86-ce24-4eb5-8c62-a2e713a5742c
+		summarizeBy: none
+		sourceColumn: codigo_txt
+
+		annotation SummarizationSetBy = Automatic
+
+	column codigo_descripcion
+		dataType: string
+		lineageTag: 82055044-a4bc-48f9-a04f-231910ba4417
+		summarizeBy: none
+		sourceColumn: codigo_descripcion
+
+		annotation SummarizationSetBy = Automatic
+
+	column Código
+		dataType: string
+		lineageTag: 9d96c656-e20a-4829-a354-20e3921c91be
+		summarizeBy: none
+		sourceColumn: Código
+		sortByColumn: codigo
+
+	column sistema_clave
+		dataType: string
+		lineageTag: f8e52abd-44a1-466a-94f6-9ed15b0ac9ef
+		summarizeBy: none
+		sourceColumn: sistema_clave
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sistema
+		dataType: string
+		lineageTag: 1d9a6579-6a61-4606-8e30-8ed5eff19c9b
+		summarizeBy: none
+		sourceColumn: Sistema
+
+		annotation SummarizationSetBy = Automatic
+
+	column componente_clave
+		dataType: string
+		lineageTag: 5e20983d-3955-430c-93b0-537978580c63
+		summarizeBy: none
+		sourceColumn: componente_clave
+
+		annotation SummarizationSetBy = Automatic
+
+	column Componente
+		dataType: string
+		lineageTag: 3f565d04-a2f7-4221-89f6-aa458e4df517
+		summarizeBy: none
+		sourceColumn: Componente
+
+		annotation SummarizationSetBy = Automatic
+
+	column nivel_detalle
+		dataType: int64
+		formatString: 0
+		lineageTag: 3970236d-6f98-4773-a946-e414bd85b85e
+		summarizeBy: none
+		sourceColumn: nivel_detalle
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Clase OEE'
+		dataType: string
+		lineageTag: 2474f053-9f7b-4f53-853c-ab5e47a673ba
+		summarizeBy: none
+		sourceColumn: Clase OEE
+
+		annotation SummarizationSetBy = Automatic
+
+	column es_planificado
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 52b3db45-cae9-4372-b7fd-a5ecb439dcf5
+		summarizeBy: none
+		sourceColumn: es_planificado
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Jerarquía Paros'
+		lineageTag: 700403b7-213f-43d2-baf9-14c29bad0e1f
+
+		level 'Área de impacto'
+			lineageTag: 7dd32d4f-0cb4-4ba7-9973-842c08d3cf6f
+			column: Área
+
+		level Código
+			lineageTag: 6fe9b88e-b8cd-4954-a213-9f577e3fa159
+			column: Código
+
+		level Sistema
+			lineageTag: 5298c89b-345f-4fe3-87a3-681c0323996a
+			column: Sistema
+
+		level Componente
+			lineageTag: e632c284-a9df-4ca7-a6a4-4f4ba898ec9a
+			column: Componente
+
+	partition dim_causa_paro = m
+		mode: import
+		source =
+				let
+				    Origen = PostgreSQL.Database("localhost:5433", "bi_paros"),
+				    dw_dim_causa_paro = Origen{[Schema="dw",Item="dim_causa_paro"]}[Data],
+				    #"Columnas con nombre cambiado" = Table.RenameColumns(dw_dim_causa_paro,{{"area_impacto", "Área"}, {"codigo_label", "Código"}, {"sistema", "Sistema"}, {"componente", "Componente"}, {"clase_oee", "Clase OEE"}})
+				in
+				    #"Columnas con nombre cambiado"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

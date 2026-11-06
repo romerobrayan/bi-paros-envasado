@@ -1,0 +1,122 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "0ef660f0f2624fe695d6",
+  "position": {
+    "x": 940,
+    "y": 300,
+    "z": 4,
+    "height": 380,
+    "width": 960,
+    "tabOrder": 4
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Sistema"
+                }
+              },
+              "queryRef": "dim_causa_paro.sistema",
+              "nativeQueryRef": "sistema",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_causa_paro"
+                    }
+                  },
+                  "Property": "Componente"
+                }
+              },
+              "queryRef": "dim_causa_paro.componente",
+              "nativeQueryRef": "componente",
+              "active": true
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "Fallas"
+                }
+              },
+              "queryRef": "_Medidas.Fallas",
+              "nativeQueryRef": "Fallas"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "Horas Falla"
+                }
+              },
+              "queryRef": "_Medidas.Horas Falla",
+              "nativeQueryRef": "Horas Falla"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Medidas"
+                    }
+                  },
+                  "Property": "MTTR (h)"
+                }
+              },
+              "queryRef": "_Medidas.MTTR (h)",
+              "nativeQueryRef": "MTTR (h)"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Fallas por sistema y componente'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

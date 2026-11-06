@@ -1,0 +1,170 @@
+table dim_fecha
+	lineageTag: 66ed269c-837e-4d8b-a273-0756926b9b6d
+	dataCategory: Time
+
+	column fecha_sk
+		dataType: int64
+		formatString: 0
+		lineageTag: 921f9dc0-a282-4667-ab92-d4c574432f07
+		summarizeBy: none
+		sourceColumn: fecha_sk
+
+		annotation SummarizationSetBy = Automatic
+
+	column fecha
+		dataType: dateTime
+		isKey
+		formatString: Long Date
+		lineageTag: c4ce4ede-5b09-4a3e-80f2-f23c60823456
+		summarizeBy: none
+		sourceColumn: fecha
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column dia
+		dataType: int64
+		formatString: 0
+		lineageTag: aacf87d3-5104-4173-a568-490cf1822ee2
+		summarizeBy: sum
+		sourceColumn: dia
+
+		annotation SummarizationSetBy = Automatic
+
+	column dia_semana
+		dataType: int64
+		formatString: 0
+		lineageTag: 517d3c86-f4f7-4523-b1c7-990f14597cae
+		summarizeBy: sum
+		sourceColumn: dia_semana
+
+		annotation SummarizationSetBy = Automatic
+
+	column nombre_dia
+		dataType: string
+		lineageTag: 27426517-1a67-46dd-bf2a-d7a7092cc9b9
+		summarizeBy: none
+		sourceColumn: nombre_dia
+
+		annotation SummarizationSetBy = Automatic
+
+	column semana_iso
+		dataType: int64
+		formatString: 0
+		lineageTag: 073614aa-f5c1-4591-a800-3e3610905d86
+		summarizeBy: sum
+		sourceColumn: semana_iso
+
+		annotation SummarizationSetBy = Automatic
+
+	column mes
+		dataType: int64
+		formatString: 0
+		lineageTag: b3e325c7-b949-4956-88c9-021927e9043b
+		summarizeBy: sum
+		sourceColumn: mes
+
+		annotation SummarizationSetBy = Automatic
+
+	column nombre_mes
+		dataType: string
+		lineageTag: 7ba3513b-f3fd-4032-9c16-c16c632a22f3
+		summarizeBy: none
+		sourceColumn: nombre_mes
+		sortByColumn: mes
+
+	column trimestre
+		dataType: int64
+		formatString: 0
+		lineageTag: a1ad497e-d74a-4538-b622-c53f94e8e8fc
+		summarizeBy: sum
+		sourceColumn: trimestre
+
+		annotation SummarizationSetBy = Automatic
+
+	column Año
+		dataType: int64
+		formatString: 0
+		lineageTag: f5164b81-ddc0-4cc1-be06-1173866c2a60
+		summarizeBy: none
+		sourceColumn: Año
+
+		annotation SummarizationSetBy = User
+
+	column Año-Mes
+		dataType: string
+		lineageTag: 53890515-06a9-4b9f-af31-f0ba8d0ae78f
+		summarizeBy: none
+		sourceColumn: Año-Mes
+
+		annotation SummarizationSetBy = Automatic
+
+	column es_fin_de_semana
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 15ba38a4-2ec1-4718-af42-188c35973e0b
+		summarizeBy: none
+		sourceColumn: es_fin_de_semana
+
+		annotation SummarizationSetBy = Automatic
+
+	column es_festivo
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: ad832d28-19b6-43aa-8799-978124abaab8
+		summarizeBy: none
+		sourceColumn: es_festivo
+
+		annotation SummarizationSetBy = Automatic
+
+	column nombre_festivo
+		dataType: string
+		lineageTag: 6b5f83ce-e703-4508-b8f7-3bf1ba776061
+		summarizeBy: none
+		sourceColumn: nombre_festivo
+
+		annotation SummarizationSetBy = Automatic
+
+	column es_dia_habil
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 297ebf43-7287-474d-b50b-802d6a087b92
+		summarizeBy: none
+		sourceColumn: es_dia_habil
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy Calendario
+		lineageTag: 5acbed1b-38ec-4702-8748-e6d1e075bab0
+
+		level Año
+			lineageTag: 96afb9e4-efb4-4279-8279-043d7c8b1db8
+			column: Año
+
+		level Trimestre
+			lineageTag: 70ca3c9b-ab4b-4a80-a542-a28e40babe78
+			column: trimestre
+
+		level Mes
+			lineageTag: 42c80af0-3df5-4a10-b7c5-059c92662013
+			column: nombre_mes
+
+		level Día
+			lineageTag: fa4a4ba9-3bfe-4d72-bc0e-0562f2b4f617
+			column: fecha
+
+	partition dim_fecha = m
+		mode: import
+		source =
+				let
+				    Origen = PostgreSQL.Database("localhost:5433", "bi_paros"),
+				    dw_dim_fecha = Origen{[Schema="dw",Item="dim_fecha"]}[Data],
+				    #"Columnas con nombre cambiado" = Table.RenameColumns(dw_dim_fecha,{{"anio", "Año"}, {"anio_mes", "Año-Mes"}})
+				in
+				    #"Columnas con nombre cambiado"
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

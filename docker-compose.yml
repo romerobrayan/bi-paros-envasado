@@ -2,8 +2,9 @@
 # One command to bring the whole server side up from scratch:
 #     docker compose up -d --build
 # Start order is enforced with healthchecks / completion conditions:
-#     db (healthy) -> etl (completed) -> simulator, grafana ; alert-sink
-# Power BI Desktop and DBeaver run on the host and connect to localhost:${DB_PORT}
+#     db (healthy) -> etl (completed) -> simulator, grafana ; alert-sink ; cloudbeaver
+# Power BI Desktop runs on the host and connects to localhost:${DB_PORT}.
+# CloudBeaver (web DBeaver) runs here: http://localhost:${CLOUDBEAVER_PORT:-8978}
 # =============================================================================
 name: bi-paros-envasado
 
@@ -105,6 +106,24 @@ services:
       alert-sink:
         condition: service_started
 
+  cloudbeaver:
+    # Web version of DBeaver: SQL client for the admin user (sql/queries, sql/demo)
+    image: dbeaver/cloudbeaver:26.2.4
+    restart: unless-stopped
+    environment:
+      CLOUDBEAVER_APP_ANONYMOUS_ACCESS_ENABLED: "false"   # only the admin created on first start
+      TZ: America/Bogota
+    ports:
+      - "127.0.0.1:${CLOUDBEAVER_PORT:-8978}:8978"      # localhost only: it reaches the DB as superuser
+    volumes:
+      - cloudbeaver-data:/opt/cloudbeaver/workspace
+      # pre-provisioned connection to db:5432/bi_paros (applied on an empty workspace, no password stored)
+      - ./cloudbeaver/initial-data-sources.conf:/opt/cloudbeaver/conf/initial-data-sources.conf:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:
   grafana-data:
+  cloudbeaver-data:

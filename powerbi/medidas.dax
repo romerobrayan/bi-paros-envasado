@@ -1,10 +1,14 @@
 // =============================================================================
 // Medidas DAX del modelo semántico — BI de paros y productividad
-// Cómo usarlo: Power BI Desktop > Vista de consultas DAX > pegar todo este
-// archivo > en el CodeLens "Actualizar modelo: agregar N medidas nuevas" (o el
-// botón "Actualizar modelo con cambios") > Ejecutar para validar.
-// Requisitos: tablas renombradas sin el prefijo "dw " y la tabla vacía _Medidas
-// creada con "Introducir datos".
+// The live definitions are in the PBIP project (BI_Paros_Envasado.SemanticModel,
+// TMDL). This file is the same logic for the DAX query view: paste it, use the
+// CodeLens "Actualizar modelo" and run it to validate the numbers.
+// Columns renamed in the model for display: dim_fecha[anio] -> [Año],
+// [anio_mes] -> [Año-Mes]; dim_maquina[maquina_nk] -> [Máquina];
+// dim_turno[turno_nk] -> [Turno]; dim_causa_paro: area_impacto -> [Área],
+// codigo_label -> [Código], sistema -> [Sistema], componente -> [Componente],
+// clase_oee -> [Clase OEE]; dim_referencia[referencia_nk] -> [Referencia];
+// dim_estado_turno[categoria] -> [Categoría].
 //
 // Modelo de tiempo del OEE (igual que dw.vw_kpi_mensual_maquina):
 //   Disponibilidad = horas operativas / horas planificadas
@@ -46,12 +50,21 @@ DEFINE
         [OEE] * DIVIDE ( [Horas Planificadas], [Horas Planificadas] + [Horas No Programadas] )
 
     // ---------- Inteligencia de tiempo ----------------------------------------
+    // dim_fecha covers 2022-2027: without one year in context the "previous year"
+    // of the whole range overlaps the same facts, so the measure only answers
+    // when a single year is selected and that year has data.
     MEASURE '_Medidas'[OEE Año Anterior] =
-        CALCULATE ( [OEE], SAMEPERIODLASTYEAR ( dim_fecha[fecha] ) )
+        IF (
+            HASONEVALUE ( dim_fecha[Año] ) && NOT ISBLANK ( [OEE] ),
+            CALCULATE ( [OEE], SAMEPERIODLASTYEAR ( dim_fecha[fecha] ) )
+        )
     MEASURE '_Medidas'[Var OEE vs Año Anterior (pp)] =
         IF ( NOT ISBLANK ( [OEE] ) && NOT ISBLANK ( [OEE Año Anterior] ), [OEE] - [OEE Año Anterior] )
     MEASURE '_Medidas'[Pacas Año Anterior] =
-        CALCULATE ( [Pacas Producidas], SAMEPERIODLASTYEAR ( dim_fecha[fecha] ) )
+        IF (
+            HASONEVALUE ( dim_fecha[Año] ) && NOT ISBLANK ( [Pacas Producidas] ),
+            CALCULATE ( [Pacas Producidas], SAMEPERIODLASTYEAR ( dim_fecha[fecha] ) )
+        )
     MEASURE '_Medidas'[Var Pacas vs Año Anterior %] =
         DIVIDE ( [Pacas Producidas] - [Pacas Año Anterior], [Pacas Año Anterior] )
     MEASURE '_Medidas'[Pacas Acumuladas Año (YTD)] = TOTALYTD ( [Pacas Producidas], dim_fecha[fecha] )
@@ -74,25 +87,26 @@ DEFINE
         DIVIDE ( [Horas Paro], CALCULATE ( [Horas Paro], ALLSELECTED ( dim_causa_paro ) ) )
     MEASURE '_Medidas'[% Paro No Planificado] =
         DIVIDE ( CALCULATE ( [Horas Paro], dim_causa_paro[es_planificado] = FALSE () ), [Horas Paro] )
-    // Pareto: % acumulado ordenando las causas de mayor a menor
+    // Pareto: % acumulado ordenando las causas de mayor a menor.
+    // [Código] is sorted by [codigo], and Power BI adds the sort column to the
+    // visual query, so both columns must be cleared together; with only [Código]
+    // the measure returned each cause's own share instead of the running total.
     MEASURE '_Medidas'[Pareto % Acumulado] =
         VAR HorasActual = [Horas Paro]
         VAR Total = CALCULATE ( [Horas Paro], ALLSELECTED ( dim_causa_paro ) )
-        VAR Acumulado =
-            SUMX (
-                FILTER (
-                    ALLSELECTED ( dim_causa_paro[codigo_label] ),
-                    CALCULATE ( [Horas Paro] ) >= HorasActual
-                ),
-                CALCULATE ( [Horas Paro] )
+        VAR Causas =
+            ADDCOLUMNS (
+                ALLSELECTED ( dim_causa_paro[Código], dim_causa_paro[codigo] ),
+                "@horas", CALCULATE ( [Horas Paro] )
             )
+        VAR Acumulado = SUMX ( FILTER ( Causas, [@horas] >= HorasActual ), [@horas] )
         RETURN
             IF ( NOT ISBLANK ( HorasActual ), DIVIDE ( Acumulado, Total ) )
     MEASURE '_Medidas'[Línea 80%] = 0.8
     MEASURE '_Medidas'[Ranking Causa] =
         IF (
             NOT ISBLANK ( [Horas Paro] ),
-            RANKX ( ALLSELECTED ( dim_causa_paro[codigo_label] ), [Horas Paro], , DESC, DENSE )
+            RANKX ( ALLSELECTED ( dim_causa_paro[Código], dim_causa_paro[codigo] ), [Horas Paro], , DESC, DENSE )
         )
 
     // ---------- Mantenimiento ------------------------------------------------
@@ -109,7 +123,7 @@ DEFINE
 
 EVALUATE
     SUMMARIZECOLUMNS (
-        dim_maquina[maquina_nk],
+        dim_maquina[Máquina],
         "OEE", [OEE],
         "Disponibilidad", [Disponibilidad],
         "Rendimiento", [Rendimiento],

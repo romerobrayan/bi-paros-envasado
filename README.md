@@ -87,8 +87,8 @@ What happens:
 | Service | URL / connection |
 |---|---|
 | Grafana | http://localhost:3000 (user/password from `.env`) |
-| PostgreSQL (DBeaver) | `localhost:5432`, database `bi_paros`, user `POSTGRES_USER` |
-| PostgreSQL (Power BI) | `localhost:5432`, database `bi_paros`, user `powerbi_ro` |
+| PostgreSQL (DBeaver) | `localhost:${DB_PORT}` (5432 by default), database `bi_paros`, user `POSTGRES_USER` |
+| PostgreSQL (Power BI) | `localhost:${DB_PORT}`, database `bi_paros`, user `powerbi_ro` |
 
 Useful commands:
 

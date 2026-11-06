@@ -9,7 +9,7 @@ Prerequisite: `docker compose up -d` is running and the ETL finished (`docker co
 ## 1. Connect to PostgreSQL (not to the Excel)
 
 1. **Inicio → Obtener datos → Más… → Base de datos PostgreSQL → Conectar**.
-2. Servidor: `localhost:5432` · Base de datos: `bi_paros` · Modo de conectividad: **Importar** → Aceptar.
+2. Servidor: `localhost:<DB_PORT>` (5432 by default; 5433 on the development PC because 5432 was taken) · Base de datos: `bi_paros` · Modo de conectividad: **Importar** → Aceptar.
 3. Credentials: tab **Base de datos**, user `powerbi_ro`, password = `POWERBI_DB_PASSWORD` from `.env`.
    If an SSL/certificate error appears: **Archivo → Opciones y configuración → Configuración de origen de datos → localhost;bi_paros → Editar permisos → uncheck "Cifrar conexiones"**.
 4. In the Navigator select (schema `dw`):
@@ -58,7 +58,7 @@ Do **not** relate `fact_paro[registro_padre_id]` with `fact_produccion_turno`: t
 ## 5. Measures
 
 1. **Inicio → Introducir datos** → table name `_Medidas`, leave one empty column → **Cargar**.
-2. **Vista de consultas DAX** → paste `powerbi/medidas.dax` → click the CodeLens **"Actualizar modelo: agregar … medidas nuevas"** → **Ejecutar**.
+2. The measures were created with a `createOrReplace` script in the **Vista TMDL**, with display folders (1. Bases, 2. OEE, 3. Inteligencia de tiempo, 4. Paros, 5. Mantenimiento). The same logic is in `powerbi/medidas.dax` for the **Vista de consultas DAX** (paste → CodeLens **"Actualizar modelo"** → **Ejecutar**).
 3. Format: select the % measures (Disponibilidad, Rendimiento, Calidad, OEE, TEEP, OEE Año Anterior, Var…, % …, Pareto % Acumulado, Meta OEE, Umbral Alerta OEE, Línea 80%) → **Herramientas de medición → Formato: Porcentaje**, 1 decimal.
 4. Hide the empty column of `_Medidas`; the table turns into a measure folder.
 
@@ -73,33 +73,39 @@ Do **not** relate `fact_paro[registro_padre_id]` with `fact_produccion_turno`: t
 
 ## 6. Report pages
 
-Common to every page: slicers **Año** (dim_fecha[anio]), **Máquina** (dim_maquina[maquina_nk]), **Turno** (dim_turno[turno_nk]); a title; and the page navigator (**Insertar → Botones → Navegador → Navegador de páginas**). To sync slicers across pages: **Ver → Sincronizar segmentaciones**.
+The repository already contains the finished project (`powerbi/BI_Paros_Envasado.pbip`). The first version of the pages was generated with `powerbi/build_report_pages.py` (PBIR files, run with Power BI Desktop closed) and then adjusted by hand. To make the visuals readable, these columns were renamed in the model: `anio` → **Año**, `anio_mes` → **Año-Mes**, `maquina_nk` → **Máquina**, `turno_nk` → **Turno**, `area_impacto` → **Área**, `codigo_label` → **Código**, `sistema` → **Sistema**, `componente` → **Componente**, `clase_oee` → **Clase OEE**, `referencia_nk` → **Referencia**, `categoria` → **Categoría**.
+
+Common to every page: slicers **Año**, **Máquina**, **Turno** (dropdown) and a page navigator (**Insertar → Botones → Navegador → Navegador de páginas**, copied to every page).
 
 ### Page 1 — Resumen ejecutivo (management, Q1 and Q3)
-- 5 **Tarjetas**: OEE, Disponibilidad, Rendimiento, Calidad, Pacas Producidas.
-- **Medidor** (gauge): OEE with target = Meta OEE.
-- **Gráfico de líneas**: X = Calendario (anio → nombre_mes), Y = OEE, Leyenda = maquina_nk; add Meta OEE as a second line.
-- **Gráfico de columnas agrupadas**: X = maquina_nk, Y = OEE and OEE Año Anterior (YoY comparison).
-- **Tabla**: maquina_nk, OEE, Var OEE vs Año Anterior (pp), TEEP, with conditional format (red < 60%, amber < 75%, green ≥ 75%).
+- 5 **Tarjetas**: OEE, Disponibilidad, Rendimiento, Calidad (approximate), Pacas Producidas.
+- **Gráfico de líneas**: X = Año-Mes, Y = OEE, Leyenda = Máquina.
+- **Medidor**: OEE with target = Meta OEE (75%).
+- **Columnas agrupadas**: X = Año, Y = OEE and OEE Año Anterior.
+- **Matriz** "Resumen por máquina": Máquina; OEE, Var OEE vs Año Anterior (pp), TEEP, Horas Paro. The variation only shows when one year is selected (see §5 notes).
 
 ### Page 2 — Análisis de paros (Pareto + drill-down, Q2 and Q4)
-- **Gráfico de columnas y líneas** (Pareto): X = codigo_label, Columns = Horas Paro, Line = Pareto % Acumulado, Line = Línea 80% (secondary axis 0–100%). Sort by Horas Paro descending.
-- **Matriz** with drill-down: Rows = Jerarquía Paros (Área → Código → Sistema → Componente), Values = Horas Paro, % Participación Paro, Eventos de Paro. Use the **+** icons / "Expandir un nivel" to show the drill.
-- **Árbol de descomposición**: Analizar = Horas Paro, Explicar por = area_impacto, codigo_label, sistema, componente, maquina_nk.
-- **Gráfico de barras apiladas**: X = maquina_nk, Y = % Paro sobre Horas Trabajadas, Leyenda = clase_oee (P-MTO-22 indicator).
+- **Gráfico de columnas y líneas** (Pareto): X = Código, columns = Horas Paro, lines = Pareto % Acumulado and Línea 80% (secondary axis), sorted by Horas Paro descending.
+- **Matriz** with drill-down: Rows = Área → Código → Sistema → Componente; Values = Horas Paro, % Participación Paro, Eventos de Paro. The **+ / −** icons open each level.
+- **Árbol de descomposición**: Analizar = Horas Paro; Explicar por = Área, Código, Sistema, Componente, Máquina.
+- **Columnas agrupadas**: X = Máquina, Y = % Paro sobre Horas Trabajadas, Leyenda = Clase OEE (P-MTO-22 indicator).
 
 ### Page 3 — Mantenimiento (Q4, Q5, Q6)
-- **Tarjetas**: Fallas, MTTR (h), MTBF (h).
-- **Gráfico de columnas**: X = maquina_nk, Y = MTBF (h) and MTTR (h).
-- **Matriz**: Rows = sistema → componente filtered with **Filtros en este objeto visual** codigo = 1, Values = Fallas, Horas Falla, MTTR (h).
-- **Gráfico de líneas**: X = Calendario, Y = Horas Paro and Horas Paro Mes Anterior, filter codigo in {3, 5} (power supply and operational adjustments).
+- **Tarjetas**: Fallas (code 01), MTTR (h), MTBF (h).
+- **Columnas y líneas**: X = Máquina, columns = MTBF (h), line = MTTR (h) on the secondary axis (the scales differ by two orders of magnitude).
+- **Matriz**: Rows = Sistema → Componente; Values = Fallas, Horas Falla, MTTR (h).
+- **Gráfico de líneas**: X = Año-Mes, Y = Horas Paro, Leyenda = Código.
 
-### Page 4 — Producción y planeación (Q10, Q11, P-MTO-22 production)
-- **Matriz**: Rows = maquina_nk, Columns = anio → nombre_mes, Values = Pacas Producidas (the P-MTO-22 "production by machine, month and year").
-- **Gráfico de columnas agrupadas**: X = nombre_mes, Y = Pacas Producidas and Pacas Año Anterior.
-- **Gráfico de barras**: Y = referencia_nk (Top N 10 by Rendimiento ascending), X = Rendimiento.
-- **Gráfico de anillos**: Horas No Programadas by dim_estado_turno[categoria].
-- **Tabla**: turno_nk, esquema, Pacas por Hora, Disponibilidad.
+### Page 4 — Producción y planeación (Q10, Q11, Q12, P-MTO-22 production)
+- **Matriz**: Rows = Máquina, Columns = Año, Values = Pacas Producidas.
+- **Gráfico de anillos**: Horas No Programadas by Categoría.
+- **Barras**: Rendimiento by Referencia, ascending (worst references first).
+- **Matriz**: Turno; Pacas por Hora, Disponibilidad.
+
+### Notes found while reviewing the report
+- `dim_fecha` covers 2022–2027. With no year selected, `SAMEPERIODLASTYEAR` over the whole range overlaps the same facts and returned the same OEE as the current period, so `OEE Año Anterior` and `Pacas Año Anterior` only answer when `HASONEVALUE(dim_fecha[Año])` and the current year has data.
+- `Código` is sorted by `codigo`, and Power BI adds the sort column to the visual query. `ALLSELECTED(dim_causa_paro[Código])` alone left the `codigo` filter in place, so the Pareto line showed each cause's own share. The fix clears both columns: `ALLSELECTED(dim_causa_paro[Código], dim_causa_paro[codigo])`.
+- 2022 has no OEE on purpose: no reference was recorded that year (DQ12), so there is no ideal rate and Performance cannot be computed. Bales are still counted.
 
 ## 7. Save as PBIP (Git-friendly)
 

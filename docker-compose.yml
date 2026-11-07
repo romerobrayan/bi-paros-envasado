@@ -33,7 +33,7 @@ services:
       POWERBI_DB_USER: ${POWERBI_DB_USER:?POWERBI_DB_USER missing - copy .env.example to .env}
       POWERBI_DB_PASSWORD: ${POWERBI_DB_PASSWORD:?POWERBI_DB_PASSWORD missing - copy .env.example to .env}
     ports:
-      - "${DB_PORT:-5432}:5432"            # DBeaver / Power BI on the host
+      - "${DB_PORT:-5433}:5432"            # DBeaver / Power BI on the host
     volumes:
       - pgdata:/var/lib/postgresql/data    # persistence
       - ./sql/init:/docker-entrypoint-initdb.d:ro   # DDL runs only on an EMPTY volume

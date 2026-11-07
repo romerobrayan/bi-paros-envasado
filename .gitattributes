@@ -3,3 +3,4 @@
 *.sql  text eol=lf
 *.yml  text eol=lf
 *.py   text eol=lf
+.env.example text eol=lf

@@ -23,10 +23,10 @@ flowchart LR
         S["simulator<br/>1 plant hour every N s"]
         G["Grafana 11<br/>provisioned datasource,<br/>dashboard and alert rule"]
         A["alert-sink<br/>webhook → ops.alertas_recibidas"]
-        DBV["cloudbeaver<br/>web DBeaver,<br/>provisioned connection"]
     end
     subgraph Host["Host (Windows)"]
         PBI["Power BI Desktop<br/>(PBIP project)"]
+        DBV["DBeaver"]
     end
     X -->|read-only mount| E --> DB
     S -->|INSERT hourly facts| DB
@@ -45,21 +45,21 @@ flowchart LR
 ## Repository layout
 
 ```
-├── docker-compose.yml          # db, etl, simulator, alert-sink, grafana, cloudbeaver
+├── docker-compose.yml          # db, etl, simulator, alert-sink, grafana (+ optional cloudbeaver)
 ├── .env.example                # copy to .env (git-ignored)
 ├── data/raw/                   # put the Excel here (git-ignored: personal data)
 ├── sql/
 │   ├── init/                   # DDL executed automatically on an empty volume
 │   │   ├── 01_schemas.sql … 06_views.sql
 │   │   └── 99_roles.sh         # least-privilege users from env vars
-│   ├── queries/                # analytical queries + reconciliation (CloudBeaver / DBeaver)
+│   ├── queries/                # analytical queries + reconciliation (run from DBeaver)
 │   └── demo/                   # SCD2 demo and live simulator scenarios
 ├── etl/                        # Python ETL, simulator and alert sink (one image)
 ├── grafana/
 │   ├── provisioning/           # datasource, dashboard provider, alert rule, contact point
 │   ├── dashboards/operativo.json
 │   └── build_dashboard.py      # generates the dashboard JSON
-├── cloudbeaver/initial-data-sources.conf   # pre-provisioned connection to db:5432/bi_paros
+├── cloudbeaver/initial-data-sources.conf   # optional web DBeaver: provisioned connection
 ├── powerbi/                    # Power BI project in PBIP format (text, Git-friendly)
 └── docs/                       # design, data dictionary, ETL and data quality
 ```
@@ -68,44 +68,62 @@ flowchart LR
 
 ## Reproduce from scratch
 
-Requirements: Docker Desktop, Git and Power BI Desktop (on the host). The SQL client (CloudBeaver) runs in Docker; a desktop DBeaver also works against `localhost:${DB_PORT}`.
+Requirements on the host: **Docker Desktop** (running), **Git**, **Power BI Desktop** and **DBeaver Community**. Power BI and DBeaver run on the host and connect to the containers.
 
-```bash
-git clone <repo-url> bi-paros-envasado
+### 1. Server side — one command
+
+```powershell
+git clone https://github.com/romerobrayan/bi-paros-envasado.git
 cd bi-paros-envasado
-cp .env.example .env                       # edit every CHANGE_ME value
-# copy the Excel into data/raw/ with the name set in SOURCE_FILE_NAME
+copy .env.example .env          # Linux/macOS: cp .env.example .env  (change every CHANGE_ME value)
+# copy "SEGUIMIENTO TEMPERAS Y VINILOS Actividad.xlsm" into data\raw\  (not versioned: personal data)
 docker compose up -d --build
-docker compose logs -f etl                 # watch the load and the reconciliation
 ```
+
+`docker compose up -d --build` is the only command needed to build and start everything. The first run downloads the images and takes a few minutes; later runs take seconds.
 
 What happens:
-1. `db` creates the schemas, tables, indexes, views and the three users (only the first time, on an empty volume).
-2. `etl` loads the warehouse and exits with code 0. It prints the rule counts and the reconciliation.
-3. `simulator` starts after the ETL finishes and writes one row per machine every `SIM_TICK_SECONDS`.
-4. `grafana` starts already connected to PostgreSQL, with the dashboard and the alert rule loaded. There is nothing to configure by hand.
-5. `cloudbeaver` starts with the connection **bi_paros (PostgreSQL DW)** (`db:5432`, user `bi_admin`) already defined. On the very first start it shows a short wizard to create its own admin user; after that, open the connection and type `POSTGRES_PASSWORD` from `.env` (it is never stored in the repository).
+1. `db` creates the schemas, tables, indexes, views and the three least-privilege users (only the first time, on an empty volume).
+2. `etl` loads the warehouse, prints the rule counts and the reconciliation, and exits with code 0. If the workbook has a different name but is the only `.xlsm`/`.xlsx` in `data/raw/`, it is used anyway.
+3. `simulator` starts after the ETL finishes and writes one simulated plant hour per machine every `SIM_TICK_SECONDS`.
+4. `grafana` starts already connected to PostgreSQL, with the dashboard, the alert rule and the contact point loaded. There is nothing to configure by hand.
 
-| Service | URL / connection |
-|---|---|
-| Grafana | http://localhost:3000 (user/password from `.env`) |
-| CloudBeaver (SQL client) | http://localhost:8978 (bound to 127.0.0.1 only; admin created in the first-start wizard) |
-| PostgreSQL (desktop DBeaver) | `localhost:${DB_PORT}` (5432 by default), database `bi_paros`, user `POSTGRES_USER` |
-| PostgreSQL (Power BI) | `localhost:${DB_PORT}`, database `bi_paros`, user `powerbi_ro` |
+If `.env` is missing, Compose stops before starting anything and names the missing variable.
 
-Useful commands:
+Check that it worked:
 
-```bash
-docker compose run --rm etl        # re-run only the ETL (full refresh)
-docker compose down                # stop, keep data (volumes)
-docker compose down -v             # stop and delete data → next "up" rebuilds everything
+```powershell
+docker compose ps -a              # etl "Exited (0)", the rest "Up"
+docker compose logs etl           # ends with "ETL OK" and the reconciliation table
 ```
+
+### 2. Clients on the host
+
+| Tool | Connection |
+|---|---|
+| Grafana | http://localhost:3000 — user/password `GRAFANA_ADMIN_*` from `.env`; the dashboard *Monitoreo operativo — Líneas de envasado* opens as home |
+| DBeaver | PostgreSQL, host `localhost`, port `DB_PORT` (5433), database `bi_paros`, user `POSTGRES_USER`, password `POSTGRES_PASSWORD` |
+| Power BI | open `powerbi/BI_Paros_Envasado.pbip`; when asked for credentials choose **Base de datos**, user `powerbi_ro`, password `POWERBI_DB_PASSWORD`; then **Inicio → Actualizar** |
+
+The Power BI project points to `localhost:5433`. If you use another `DB_PORT`, change it in **Transformar datos → Configuración de origen de datos → Cambiar origen**.
+
+Optional web DBeaver (CloudBeaver), with the connection already defined: `docker compose --profile tools up -d` → http://localhost:8978 (127.0.0.1 only). On the first start it asks for its own admin user. If opening the connection says *Driver disabled*, go to **Administration → Server Configuration → Disabled drivers**, remove PostgreSQL and save.
+
+### 3. Useful commands
+
+```powershell
+docker compose run --rm etl        # re-run only the ETL (full refresh, same result)
+docker compose down                # stop, keep data (volumes)
+docker compose down -v             # stop and delete data -> next "up" rebuilds everything from zero
+```
+
+Troubleshooting: if port 5433 or 3000 is taken, change `DB_PORT` / `GRAFANA_PORT` in `.env`. If the ETL could not find the workbook, copy it into `data/raw/` and run `docker compose up -d` again.
 
 ---
 
 ## Live demo (Grafana reacts to the simulator)
 
-From CloudBeaver (or DBeaver) run `sql/demo/02_escenarios_simulador.sql`:
+From DBeaver run `sql/demo/02_escenarios_simulador.sql`:
 
 ```sql
 UPDATE sim.control SET modo = 'falla', actualizado = now() WHERE maquina_nk = 'Vinilos_2';
@@ -137,9 +155,9 @@ OEE = Availability × Performance × Quality. The time model and the indicator c
 
 - **Ley 1581 de 2012.** Operator and maintenance staff names are replaced by `PER-xxxxxx` (salted SHA-256) **before** they are written to the database. The salt lives in `.env`.
 - The Excel source is git-ignored. No password or connection string is versioned; `.env.example` holds only placeholders.
-- **Least privilege:** `etl_user` (read/write), `grafana_ro` (read-only on `dw`, `sim`, `ops`) and `powerbi_ro` (read-only on `dw`). The admin user is only for the SQL client (CloudBeaver / DBeaver).
+- **Least privilege:** `etl_user` (read/write), `grafana_ro` (read-only on `dw`, `sim`, `ops`) and `powerbi_ro` (read-only on `dw`). The admin user is only for DBeaver.
 - Grafana: sign-up and anonymous access disabled; the admin password comes from `.env`.
-- CloudBeaver: published on `127.0.0.1` only, anonymous access disabled, and the provisioned connection does not save the database password.
+- CloudBeaver (optional): published on `127.0.0.1` only, anonymous access disabled, and the provisioned connection does not save the database password.
 
 ---
 

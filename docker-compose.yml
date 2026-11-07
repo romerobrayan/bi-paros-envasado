@@ -1,43 +1,44 @@
 # =============================================================================
+# Prerequisites: cp .env.example .env  and the Excel copied into data/raw/
 # One command to bring the whole server side up from scratch:
 #     docker compose up -d --build
 # Start order is enforced with healthchecks / completion conditions:
-#     db (healthy) -> etl (completed) -> simulator, grafana ; alert-sink ; cloudbeaver
-# Power BI Desktop runs on the host and connects to localhost:${DB_PORT}.
-# CloudBeaver (web DBeaver) runs here: http://localhost:${CLOUDBEAVER_PORT:-8978}
+#     db (healthy) -> etl (completed) -> simulator ; alert-sink -> grafana
+# Power BI Desktop and DBeaver run on the host and connect to localhost:${DB_PORT}.
+# Optional web DBeaver (CloudBeaver):  docker compose --profile tools up -d
 # =============================================================================
 name: bi-paros-envasado
 
 x-db-env: &db-env
   DB_HOST: db
   DB_PORT: "5432"
-  POSTGRES_DB: ${POSTGRES_DB}
-  ETL_DB_USER: ${ETL_DB_USER}
-  ETL_DB_PASSWORD: ${ETL_DB_PASSWORD}
+  POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB missing - copy .env.example to .env}
+  ETL_DB_USER: ${ETL_DB_USER:?ETL_DB_USER missing - copy .env.example to .env}
+  ETL_DB_PASSWORD: ${ETL_DB_PASSWORD:?ETL_DB_PASSWORD missing - copy .env.example to .env}
 
 services:
   db:
     image: postgres:16.4-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB missing - copy .env.example to .env}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER missing - copy .env.example to .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD missing - copy .env.example to .env}
       TZ: America/Bogota
       # read by sql/init/99_roles.sh to create least-privilege users
-      ETL_DB_USER: ${ETL_DB_USER}
-      ETL_DB_PASSWORD: ${ETL_DB_PASSWORD}
-      GRAFANA_DB_USER: ${GRAFANA_DB_USER}
-      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD}
-      POWERBI_DB_USER: ${POWERBI_DB_USER}
-      POWERBI_DB_PASSWORD: ${POWERBI_DB_PASSWORD}
+      ETL_DB_USER: ${ETL_DB_USER:?ETL_DB_USER missing - copy .env.example to .env}
+      ETL_DB_PASSWORD: ${ETL_DB_PASSWORD:?ETL_DB_PASSWORD missing - copy .env.example to .env}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER:?GRAFANA_DB_USER missing - copy .env.example to .env}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?GRAFANA_DB_PASSWORD missing - copy .env.example to .env}
+      POWERBI_DB_USER: ${POWERBI_DB_USER:?POWERBI_DB_USER missing - copy .env.example to .env}
+      POWERBI_DB_PASSWORD: ${POWERBI_DB_PASSWORD:?POWERBI_DB_PASSWORD missing - copy .env.example to .env}
     ports:
       - "${DB_PORT:-5432}:5432"            # DBeaver / Power BI on the host
     volumes:
       - pgdata:/var/lib/postgresql/data    # persistence
       - ./sql/init:/docker-entrypoint-initdb.d:ro   # DDL runs only on an EMPTY volume
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:?POSTGRES_USER missing - copy .env.example to .env} -d $${POSTGRES_DB:?POSTGRES_DB missing - copy .env.example to .env}"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -46,8 +47,8 @@ services:
     build: ./etl
     environment:
       <<: *db-env
-      SOURCE_FILE: /data/raw/${SOURCE_FILE_NAME}
-      PSEUDONYM_SALT: ${PSEUDONYM_SALT}
+      SOURCE_FILE: /data/raw/${SOURCE_FILE_NAME:?SOURCE_FILE_NAME missing - copy .env.example to .env}
+      PSEUDONYM_SALT: ${PSEUDONYM_SALT:?PSEUDONYM_SALT missing - copy .env.example to .env}
       TZ: America/Bogota
     volumes:
       - ./data/raw:/data/raw:ro            # the Excel source (not versioned)
@@ -83,16 +84,16 @@ services:
     image: grafana/grafana-oss:11.3.0
     restart: unless-stopped
     environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:?GRAFANA_ADMIN_USER missing - copy .env.example to .env}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD missing - copy .env.example to .env}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_AUTH_ANONYMOUS_ENABLED: "false"
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/operativo.json
       GF_USERS_DEFAULT_LANGUAGE: es-ES
       # interpolated inside provisioning/datasources/postgres.yml
-      POSTGRES_DB: ${POSTGRES_DB}
-      GRAFANA_DB_USER: ${GRAFANA_DB_USER}
-      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB missing - copy .env.example to .env}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER:?GRAFANA_DB_USER missing - copy .env.example to .env}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:?GRAFANA_DB_PASSWORD missing - copy .env.example to .env}
       TZ: America/Bogota
     ports:
       - "${GRAFANA_PORT:-3000}:3000"
@@ -107,7 +108,9 @@ services:
         condition: service_started
 
   cloudbeaver:
-    # Web version of DBeaver: SQL client for the admin user (sql/queries, sql/demo)
+    # Optional web version of DBeaver (the assignment's DBeaver runs on the host).
+    # Not started by the default command:  docker compose --profile tools up -d
+    profiles: ["tools"]
     image: dbeaver/cloudbeaver:26.2.4
     restart: unless-stopped
     environment:

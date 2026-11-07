@@ -15,8 +15,19 @@ Why PBIP and not `.pbix`:
 
 ## Connection
 
-- Source: **PostgreSQL database** `localhost:5432`, database `bi_paros`, user `powerbi_ro` (read-only on schema `dw`). Do not connect to the Excel.
+- Source: **PostgreSQL database** `localhost:5433` (the `DB_PORT` published by Docker), database `bi_paros`, user `powerbi_ro` (read-only on schema `dw`). It never connects to the Excel.
 - Mode: Import (the dataset is small; Import enables full DAX time intelligence).
-- Tables to import: `dw.dim_*` and `dw.fact_produccion_turno`, `dw.fact_paro`.
+- Tables: `dw.dim_*`, `dw.fact_produccion_turno`, `dw.fact_paro`.
 
-The semantic model, the DAX measures and the report pages are built in the next stage of the workshop.
+## Open it after cloning
+
+1. Start the server side (`docker compose up -d --build`, see the main README).
+2. Open `BI_Paros_Envasado.pbip`. When asked, choose **Base de datos**, user `powerbi_ro`, password `POWERBI_DB_PASSWORD` from `.env`.
+3. **Inicio → Actualizar**. The data cache (`.pbi/cache.abf`) is not versioned, so the visuals are empty until the first refresh.
+
+## Contents
+
+- `BI_Paros_Envasado.SemanticModel/definition/` — TMDL: one file per table, the relationships and the `_Medidas` table (38 measures in display folders).
+- `BI_Paros_Envasado.Report/definition/pages/` — PBIR: 4 pages (Resumen ejecutivo, Análisis de paros, Mantenimiento, Producción y planeación).
+- `medidas.dax` — the same measures for the DAX query view; `build_report_pages.py` — generator of the first version of the pages.
+- Step-by-step guide: [docs/04-powerbi-guide.md](../docs/04-powerbi-guide.md).

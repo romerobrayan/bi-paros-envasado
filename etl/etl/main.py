@@ -10,7 +10,9 @@ Full refresh, reproducible from scratch:
 """
 from __future__ import annotations
 
+import glob
 import hashlib
+import os
 import sys
 import time
 
@@ -93,20 +95,40 @@ def reconcile(conn, src: dict, dq: T.DQLog, base: pd.DataFrame, clean_df: pd.Dat
     ]
 
 
+def resolve_source(path: str) -> str:
+    """Use SOURCE_FILE if it exists; otherwise accept the only Excel found next to it.
+
+    The workbook is not versioned (personal data), so after a fresh clone it is
+    copied by hand into data/raw/ and its name may differ slightly.
+    """
+    if os.path.isfile(path):
+        return path
+    folder = os.path.dirname(path) or "."
+    found = sorted(glob.glob(os.path.join(folder, "*.xls[mx]")))
+    if len(found) == 1:
+        print(f"SOURCE_FILE not found, using the only workbook in {folder}: {os.path.basename(found[0])}")
+        return found[0]
+    raise SystemExit(
+        f"Source workbook not found: {path}\n"
+        f"Copy 'SEGUIMIENTO TEMPERAS Y VINILOS Actividad.xlsm' into data/raw/ "
+        f"(found {len(found)} workbooks there) and run: docker compose up -d")
+
+
 def run() -> int:
     t0 = time.time()
-    print(f"Source: {settings.source_file}")
+    source_file = resolve_source(settings.source_file)
+    print(f"Source: {source_file}")
     conn = wait_for_db(settings.dsn())
     conn.autocommit = False
     with conn.cursor() as cur:
         cur.execute("INSERT INTO etl.run_log (source_file, source_sha256) VALUES (%s, %s) RETURNING run_id",
-                    (settings.source_file, sha256(settings.source_file)))
+                    (source_file, sha256(source_file)))
         run_id = cur.fetchone()[0]
     conn.commit()
     dq = T.DQLog()
     try:
         print("[1/6] Extract")
-        raw = T.extract(settings.source_file)
+        raw = T.extract(source_file)
         cat = T.build_catalogs(raw)
         src = source_totals(raw["base"])
         print(f"      {src['filas']} rows in T_baseDeDatos")

@@ -9,7 +9,7 @@ Prerequisite: `docker compose up -d` is running and the ETL finished (`docker co
 ## 1. Connect to PostgreSQL (not to the Excel)
 
 1. **Inicio → Obtener datos → Más… → Base de datos PostgreSQL → Conectar**.
-2. Servidor: `localhost:<DB_PORT>` (5432 by default; 5433 on the development PC because 5432 was taken) · Base de datos: `bi_paros` · Modo de conectividad: **Importar** → Aceptar.
+2. Servidor: `localhost:<DB_PORT>` (5433 in `.env.example`, chosen so it does not clash with a PostgreSQL installed on the host) · Base de datos: `bi_paros` · Modo de conectividad: **Importar** → Aceptar.
 3. Credentials: tab **Base de datos**, user `powerbi_ro`, password = `POWERBI_DB_PASSWORD` from `.env`.
    If an SSL/certificate error appears: **Archivo → Opciones y configuración → Configuración de origen de datos → localhost;bi_paros → Editar permisos → uncheck "Cifrar conexiones"**.
 4. In the Navigator select (schema `dw`):
